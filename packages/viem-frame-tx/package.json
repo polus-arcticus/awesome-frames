@@ -4,7 +4,21 @@
 	"description": "Unofficial viem-based encoder for EIP-8141 frame transactions (type 0x06) — RLP serialization + sig-hash computation, ground-truthed against ethrex's reference implementation. No native viem support exists yet; use this directly rather than through viem's chain.serializers.transaction pipeline.",
 	"type": "module",
 	"license": "Unlicense",
-	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/polus-arcticus/awesome-frames.git",
+		"directory": "packages/viem-frame-tx"
+	},
+	"homepage": "https://github.com/polus-arcticus/awesome-frames/tree/main/packages/viem-frame-tx#readme",
+	"bugs": "https://github.com/polus-arcticus/awesome-frames/issues",
+	"keywords": [
+		"viem",
+		"ethereum",
+		"eip-8141",
+		"frame-transaction",
+		"account-abstraction",
+		"rlp"
+	],
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",

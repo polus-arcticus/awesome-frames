@@ -62,7 +62,15 @@ It's already wired up as the `ethrexTestnet` network in [`contracts/hardhat.conf
 
 ## `packages/viem-frame-tx`
 
+[![npm](https://img.shields.io/npm/v/viem-frame-tx)](https://www.npmjs.com/package/viem-frame-tx)
+
 The RLP encoder for Frame transactions — `serializeFrameTransaction(tx)` (the full `0x06`-prefixed envelope, ready for `sendRawTransaction`) and `computeSigHash(tx)` (the digest a signature commits to). It does not sign anything and does not hook into viem's `chain.serializers.transaction` extension point, because a Frame tx's `signatures` is an array keyed by scheme, not a single top-level `{r, s, v}` — you build your `FrameTransactionSerializable` with `signatures` already populated (sign `computeSigHash(tx)` yourself, however your scheme requires), then serialize and submit.
+
+Published standalone on npm — usable outside this monorepo with no dependency on the contracts package:
+
+```bash
+pnpm add viem-frame-tx
+```
 
 Full usage example, the ground-truth story, and a byte-exact golden vector are in [`packages/viem-frame-tx/README.md`](packages/viem-frame-tx/README.md).
 
