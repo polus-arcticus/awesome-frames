@@ -1,17 +1,26 @@
-/// @title LightningRSAAccount
+/// @title YoloRSAWideAccount
 /// @notice The wide-modulus sibling of YoloRSAAccount.yul: same
 /// deliberately-broken textbook RSA scheme (see YoloRSA.sol's header for
 /// the padding-scheme caveat — it applies unchanged here), but with `n`
 /// spanning TWO 32-byte words (up to 512 bits) instead of one. Where
-/// YoloRSA is "small enough to factor with a naive script," LightningRSA
-/// is sized to survive a specific real-world attacker clock: a modulus
-/// whose GNFS factoring time, run on Ethereum-validator-spec hardware
-/// (ethereum.org's own CPU guidance) starting the instant a spend hits the
-/// mempool, lands at a target duration (10 minutes, 1 hour, ...) — the
-/// "LightningRSA" name is the pun: a wallet whose security window is
-/// measured against how long a transaction can plausibly sit exposed
-/// before confirmation, the same shape of assumption Bitcoin's own P2PK
-/// mempool exposure already rests on informally.
+/// YoloRSAAccount's tiers are "small enough to factor with a naive
+/// script," this template's tiers are sized to survive a specific
+/// real-world attacker clock: a modulus whose GNFS factoring time, run on
+/// Ethereum-validator-spec hardware (ethereum.org's own CPU guidance)
+/// starting the instant a spend hits the mempool, lands at a target
+/// duration (`ten-minute`, `one-hour`, ...) — the same shape of assumption
+/// Bitcoin's own P2PK mempool exposure already rests on informally: a
+/// wallet whose security window is measured against how long a
+/// transaction can plausibly sit exposed before confirmation, not
+/// "infeasible forever."
+///
+/// @dev This was originally its own top-level module ("LightningRSA") —
+/// relocated here once it became clear the thing distinguishing it from
+/// YoloRSA was never "deployability" (both are equally deployable) but
+/// modulus width, and once the `LightningRSA` name was needed for an
+/// actual production-shaped recipe (see src/LightningRSAAccount/) built on
+/// real PKCS#1 v1.5 padding — a scheme unpadded textbook RSA, at any
+/// modulus size, never graduates to.
 ///
 /// @dev Structurally this is YoloRSAAccount.yul widened from 1 word to 2
 /// words for `n` and the signature witness — same overall account shape
@@ -23,7 +32,7 @@
 /// the message representative is `m = msgHash mod n`. msgHash is always
 /// < 2^256 (it's `compute_sig_hash(tx)`, one word). Once n > 2^256 — i.e.
 /// its high word is nonzero — `msgHash mod n` is msgHash itself, no actual
-/// reduction ever happens. That's what lets `verifyLightningRSA` skip
+/// reduction ever happens. That's what lets `verifyYoloRSAWide` skip
 /// implementing genuine 512-bit modular reduction: it only has to check
 /// that MODEXP's 64-byte result has a zero high word and msgHash as its
 /// low word. Deploying with a high word of zero (n <= 2^256, not actually
@@ -51,7 +60,7 @@
 ///   n()                0x2e52d606 — read the stored public modulus, as
 ///                          64 bytes (high word || low word).
 ///   receive()             (no selector) — accept ETH funding.
-object "LightningRSAAccount" {
+object "YoloRSAWideAccount" {
 	code {
 		let argOffset := sub(codesize(), 96)
 		codecopy(0, argOffset, 96)
@@ -89,7 +98,7 @@ object "LightningRSAAccount" {
 				// (empty-`msg` ARBITRARY entry), so no circularity.
 				let sigHash := verbatim_1i_1o(hex"B0", 0x08)
 
-				if iszero(verifyLightningRSA(sload(0), sload(1), sload(2), sHigh, sLow, sigHash)) {
+				if iszero(verifyYoloRSAWide(sload(0), sload(1), sload(2), sHigh, sLow, sigHash)) {
 					revert(0, 0)
 				}
 
@@ -122,7 +131,7 @@ object "LightningRSAAccount" {
 			// reduction is needed for `msgHash`. Clobbers memory
 			// 0x00-0xFF; caller must not rely on scratch memory across
 			// this call.
-			function verifyLightningRSA(e, nHigh, nLow, sHigh, sLow, msgHash) -> ok {
+			function verifyYoloRSAWide(e, nHigh, nLow, sHigh, sLow, msgHash) -> ok {
 				if iszero(nHigh) { leave } // n must genuinely exceed 2^256 - see header
 
 				// Reject signature >= n (2-word unsigned comparison).

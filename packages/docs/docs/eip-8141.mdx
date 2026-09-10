@@ -1,0 +1,45 @@
+---
+title: EIP-8141 primer
+---
+
+# What's a Frame transaction?
+
+[EIP-8141](https://eips.ethereum.org/EIPS/eip-8141) introduces a new transaction type (`0x06`) built from a list of **frames** — contract calls tagged with a `mode`:
+
+- **`VERIFY`** — runs as a `STATICCALL`; must call the new `APPROVE` opcode (`0xAA`) to authorize execution and/or payment. This is the account-abstraction hook: arbitrary EVM code decides whether the transaction is valid.
+- **`SENDER`** — the actual user operation(s), executed only if a prior `VERIFY` frame approved them.
+- **`DEFAULT`** — ordinary EOA-style validation.
+
+## Signature schemes
+
+The `signatures` list supports three schemes:
+
+| Scheme | Validation | Signature shape |
+|---|---|---|
+| `SECP256K1` | Protocol-verified, native `ecrecover` | 65 bytes: `v \|\| r \|\| s` |
+| `P256` | Protocol-verified, the new `P256VERIFY` opcode | 128 bytes: `r \|\| s \|\| qx \|\| qy` |
+| `ARBITRARY` | **No protocol-level check at all** — verification is entirely up to your `VERIFY` frame's code | raw bytes, whatever your scheme needs |
+
+`ARBITRARY` is what makes this a genuine account-abstraction primitive: any signature scheme you can implement in EVM opcodes, you can authorize a Frame tx with. Every recipe and grimoire entry in this repo that isn't plain ECDSA — [`NostrFrameAccount`](./recipes/nostr-frame-account.mdx)'s BIP-340 Schnorr, [YoloRSA](./grimoire/yolo-rsa.mdx)'s textbook-RSA accounts, the [`LightningRSA` recipe](./recipes/lightning-rsa.mdx)'s real padded RSA — uses `ARBITRARY`.
+
+A `FrameSignature` is `[scheme, signer, msg, signature]`:
+
+- `signer: null` is **required** for `ARBITRARY` (it means "resolves to `tx.sender`" for `SECP256K1`/`P256`).
+- `msg`: empty signs `computeSigHash(tx)`; 32 bytes signs that explicit digest instead.
+- An `ARBITRARY` entry's raw `signature` bytes are elided before `compute_sig_hash` is computed — they're read back at *execution* time via the `SIGDATACOPY` opcode (`0xB5`), not from frame `data`. This matters: a witness carried in frame `data` would have to sign a hash that already contains itself, an unsatisfiable fixed point. Put bespoke witness bytes in an `ARBITRARY` signature entry with an empty `msg`, never in frame `data`.
+
+## The validation trace rules — the sharp edge to know about early
+
+The public mempool's **validation trace rules** constrain what a `VERIFY` frame may do: it may not `CALL*`/`EXTCODE*` anything except `tx.sender`, a default-code account, or a **precompile**. A `VERIFY` frame that needs custom crypto has to inline it using only precompiles (`ecrecover` `0x01`, `SHA256` `0x02`, `MODEXP` `0x05`, ...) — it can't delegate to a separately deployed library contract and still be publicly propagatable.
+
+This is why every self-verifying account in this repo is written as **pure Yul**, not Solidity: `solc` cannot emit EIP-8141's new opcodes (`APPROVE` `0xAA`, `TXPARAM` `0xB0`, `SIGDATACOPY` `0xB5`, ...) from a normal contract's inline assembly — only Yul's `verbatim` builtin can. The usual pattern (see [`NostrFrameAccount`](./recipes/nostr-frame-account.mdx) for a worked example) is: derive and unit-test the verification math in isolation as a pure Solidity library first — fast iteration, easy known-answer vectors, real EVM context via Hardhat — then re-inline that exact math in the Yul account using only precompiles.
+
+## The testnet
+
+[`lambdaclass/ethrex`](https://github.com/lambdaclass/ethrex)'s "Hegotá" testnet is, as far as this repo's research turned up, the only public chain that actually accepts Frame transactions right now:
+
+- RPC: `https://rpc1.privacy.ethrex.xyz` (chain id `8141` / `0x1fcd`)
+- Explorer: https://dora.privacy.ethrex.xyz
+- Faucet: https://faucet.privacy.ethrex.xyz/artifacts
+
+It's wired up as the `ethrexTestnet` network in `contracts/hardhat.config.ts` and as an exported `ethrexTestnet` viem chain from [`viem-frame-tx`](./viem-frame-tx.mdx). Because this targets a Draft EIP on a fork of a fork, **the wire format is not settled** — before trusting any encoding against a different node, check `web3_clientVersion` yourself and re-derive from that exact commit. See `viem-frame-tx`'s README "Known discrepancies" section for the three (!) different wire formats found across the EIP text, ethrex's `main` branch, and the exact commit this testnet runs.

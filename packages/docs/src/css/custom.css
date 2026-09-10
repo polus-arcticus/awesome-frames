@@ -4,27 +4,37 @@
  * work well for content-centric websites.
  */
 
-/* You can override the default Infima variables here. */
+/* A violet/indigo accent — distinct from Ethereum's own purple, fits the
+   "cryptography as poetry" grimoire framing without implying affiliation. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #5b4fd6;
+  --ifm-color-primary-dark: #4638ce;
+  --ifm-color-primary-darker: #4335c2;
+  --ifm-color-primary-darkest: #372ba0;
+  --ifm-color-primary-light: #7066de;
+  --ifm-color-primary-lighter: #7c73e1;
+  --ifm-color-primary-lightest: #9d95e9;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(91, 79, 214, 0.1);
+
+  /* Used by the animated hero banner on the homepage. The hero itself is a
+     solid --ifm-color-primary backdrop (Infima's hero--primary), so these
+     need real contrast against that — white-based, not more violet. */
+  --af-hero-glow-a: rgba(255, 255, 255, 0.22);
+  --af-hero-glow-b: rgba(255, 255, 255, 0.14);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-color-primary: #a89cf5;
+  --ifm-color-primary-dark: #9083f0;
+  --ifm-color-primary-darker: #8474ee;
+  --ifm-color-primary-darkest: #5c48e6;
+  --ifm-color-primary-light: #c0b5f9;
+  --ifm-color-primary-lighter: #ccc2fa;
+  --ifm-color-primary-lightest: #e5e0fc;
+  --docusaurus-highlighted-code-line-bg: rgba(168, 156, 245, 0.15);
+
+  --af-hero-glow-a: rgba(255, 255, 255, 0.16);
+  --af-hero-glow-b: rgba(255, 255, 255, 0.1);
 }

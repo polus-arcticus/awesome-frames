@@ -18,10 +18,8 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link
-            className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+          <Link className="button button--secondary button--lg" to="/docs/intro">
+            Read the docs
           </Link>
         </div>
       </div>
@@ -33,8 +31,8 @@ export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title={siteConfig.title}
+      description="A playground for crafting EIP-8141 Frame transactions on Ethereum — Hardhat v3 + rocketh for contracts, a standalone viem-based encoder, and a raw-Yul cryptography teaching track.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

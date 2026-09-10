@@ -1,47 +1,52 @@
 ---
-sidebar_position: 1
+title: Introduction
 ---
 
-# Tutorial Intro
+# awesome-frames
 
-Let's discover **Docusaurus in less than 5 minutes**.
+A playground for crafting [EIP-8141](https://eips.ethereum.org/EIPS/eip-8141) **Frame transactions** on Ethereum — Hardhat v3 + [rocketh](https://github.com/wighawag/rocketh) for contracts, plus a standalone [`viem`](https://viem.sh)-based encoder package, wired up against the only public Frame-tx-capable testnet that exists today.
 
-## Getting Started
+:::danger Status: Draft EIP, moving target
+As of 2026-08-27, EIP-8141 was upgraded to Scheduled-for-Inclusion for the "Hegotá" fork (target activation late 2026/2027) but is still Draft — field layouts, gas constants, and opcode numbers can and will change before (if) it activates. No mainnet-track execution client has shipped support yet ([go-ethereum#33954](https://github.com/ethereum/go-ethereum/pull/33954), the one known attempt, was closed in favor of a from-scratch implementation). [`lambdaclass/ethrex`](https://github.com/lambdaclass/ethrex)'s own fork runs a public testnet — see [the EIP-8141 primer](./eip-8141.mdx) — but even that diverges from both the published EIP text and ethrex's own `main` branch. **Treat everything here as research/prototype tooling, not production-ready.**
+:::
 
-Get started by **creating a new site**.
+## What's in this repo
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+- **[EIP-8141 primer](./eip-8141.mdx)** — what a Frame transaction actually is: `VERIFY`/`SENDER`/`DEFAULT` frame modes, the three signature schemes, and the public-mempool validation trace rules that shape every recipe below.
+- **[`viem-frame-tx`](./viem-frame-tx.mdx)** — the RLP encoder package: `serializeFrameTransaction` and `computeSigHash`, no signing pipeline of its own by design.
+- **[Recipes](./recipes/index.mdx)** — complete, working `VERIFY`-frame accounts. First one: [`NostrFrameAccount`](./recipes/nostr-frame-account.mdx), authorized by a BIP-340/Nostr Schnorr signature instead of ECDSA.
+- **[The grimoire](./grimoire/index.mdx)** — a separate, deliberately-insecure track: classic asymmetric cryptography written directly in raw Yul, small enough to verify by hand, including wallets sized to be crackable in a chosen window of time on purpose.
 
-### What you'll need
+## Repo structure
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
+```
+.
+├── contracts/                       # Hardhat v3 + rocketh contracts package
+│   ├── src/
+│   │   ├── BIP340/                  # BIP-340 (Nostr) Schnorr verification library
+│   │   ├── NostrFrameAccount/       # recipe #1: a VERIFY-frame account authorized by
+│   │   │                             #   a Nostr/BIP-340 Schnorr sig instead of ECDSA
+│   │   ├── YoloRSA/                 # deliberately-tiny textbook RSA verify library
+│   │   └── grimoire/                # NOT Frame-tx recipes — a pedagogical-crypto corner,
+│   │                                 #   minimal asymmetric primitives written in raw Yul
+│   ├── scripts/                     # vector generation + the live end-to-end demos
+│   ├── test/                        # solidity (forge-std) + TS (node:test/earl) tests
+│   ├── rocketh/                     # rocketh config (accounts, extensions)
+│   └── hardhat.config.ts            # includes the `ethrexTestnet` network (chainId 8141)
+├── packages/
+│   ├── viem-frame-tx/               # unofficial viem-based EIP-8141 encoder — own package,
+│   │                                 #   own README, no dependency on the contracts package
+│   └── docs/                        # this site
+├── package.json                     # root monorepo configuration
+└── pnpm-workspace.yaml              # pnpm workspace definition
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
+## Getting the repo running
 
 ```bash
-cd my-website
-npm run start
+pnpm i
+pnpm contracts:compile
+pnpm contracts:test
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+See the [root README](https://github.com/polus-arcticus/awesome-frames#readme) for the full setup, Zellij dev environment, environment variables, and everything not covered by this site.

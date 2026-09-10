@@ -1,0 +1,54 @@
+---
+title: ToyCurveECDH
+---
+
+# `ToyCurveECDH`
+
+Elliptic-curve Diffie-Hellman over `y² = x³ + 2x + 2 (mod 17)` — the textbook toy curve from Hankerson/Menezes/Vanstone's *Guide to Elliptic Curve Cryptography*. Its group has prime order 19 — small enough to enumerate and print on one page, which is the entire point: the same chord-and-tangent geometry that powers this repo's real secp256k1/BIP-340 work ([`BIP340.sol`](../recipes/nostr-frame-account.mdx), `NostrFrameAccount.yul`), shrunk down until a curious reader can verify it by hand, and small enough that recovering a private scalar from its public point is a nineteen-iteration `for` loop, not a research problem.
+
+It needs none of EIP-8141's opcodes — it's ordinary point arithmetic, testable entirely against a local simulated network, no live testnet or funded key required.
+
+## Why domain parameters matter here
+
+For a curve `y² = x³ + Ax + B mod P`:
+
+- **`P`** — the prime defining the finite field. Every coordinate is a residue mod `P`.
+- **`A`, `B`** — the curve's coefficients.
+- **`N`** — the order of the generator `G`: how many distinct points are in the cyclic subgroup `{G, 2G, 3G, ..., NG = O}`.
+- **`Gx, Gy`** — the generator's affine coordinates.
+
+For `ToyCurveECDH`, `P = 17`, `A = 2`, `B = 2`, `N = 19`, `G = (5, 1)`. Since `N = 19` is prime, the whole curve's point count is exactly 19 — the entire group has prime order, no cofactor to clear (`h = 1`, the best possible case, same property secp256k1 has). That's why brute-force order-counting works out so cleanly: `enumeratePoints()` in the JS mirror confirms 18 affine points plus the point at infinity, rather than assuming the order.
+
+Small subgroups matter for a reason beyond this toy curve: a composite group order lets an attacker use the **Pohlig-Hellman algorithm** to solve the discrete log problem piecewise in each small prime-power subgroup, then recombine with the Chinese Remainder Theorem — collapsing a `√N` problem into something closer to `√(largest prime factor)`. Prime-order groups (or a small cofactor times one dominant large prime) close that door. Real ECDH implementations additionally validate that an incoming public point is actually in the correct large-prime-order subgroup, to defend against small-subgroup confinement attacks that exploit exactly this structure interactively against a victim's key.
+
+## Layout
+
+- `contracts/src/grimoire/ToyCurveECDH/ToyCurveECDH.yul` — the contract. Function names are ASCII-pinyin (`jia_add` 加 "to add", `xian_chord` 弦 "the chord", `qie_tangent` 切 "the tangent", `cheng_multiply` 乘 "to multiply", `sheng_generate` 生 "to beget", `he_unite` 合 "to unite"), each glossed in the header comment.
+- `contracts/test/js/utils/toyCurve.ts` — the independent JS/bigint mirror (brute-force curve enumeration included — the group order is verified, not assumed).
+- `contracts/scripts/gen-toy-curve-vectors.ts` → `contracts/test/vectors/toy-curve-vectors.json` — known-answer vectors, same discipline as the BIP-340 vectors.
+- `contracts/test/js/ToyCurveECDH.test.ts` — deploys the compiled Yul to Hardhat's local network and checks it against the vectors plus a fresh, live two-party exchange.
+- `contracts/scripts/toy-curve-demo.ts` — a narrated Alice/Bob exchange, ending by brute-forcing Alice's private scalar back out of her public point, live, to make the "toy" part concrete:
+
+```bash skip
+pnpm contracts:execute local scripts/toy-curve-demo.ts
+```
+
+## `invmodP`: the trick that reappears everywhere else in this repo
+
+Modular inverse via Fermat's little theorem (`P` is prime): `a^(P−2) mod P`, computed with the `MODEXP` precompile (`0x05`) rather than an extended-Euclid routine:
+
+```solidity
+function invmodP(a) -> r {
+    let p := constP()
+    mstore(0x00, 0x20)        // base length
+    mstore(0x20, 0x20)        // exponent length
+    mstore(0x40, 0x20)        // modulus length
+    mstore(0x60, mod(a, p))   // base
+    mstore(0x80, sub(p, 2))   // exponent = p - 2
+    mstore(0xa0, p)           // modulus
+    if iszero(staticcall(gas(), 0x05, 0x00, 0xc0, 0x00, 0x20)) { revert(0, 0) }
+    r := mload(0x00)
+}
+```
+
+The exact same call shape — three length words, then base/exponent/modulus — is what verifies a signature in [`YoloRSA`](./yolo-rsa.mdx) (and its [wide tiers](./yolo-rsa-wide.mdx)), and in the [`LightningRSA` recipe](../recipes/lightning-rsa.mdx): `MODEXP` is a general-purpose modular-exponentiation precompile, and RSA verification (`s^e mod n`) is, structurally, the exact same operation as this modular inverse.

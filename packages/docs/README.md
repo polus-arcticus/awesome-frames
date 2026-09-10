@@ -1,43 +1,37 @@
-# Website
+# `docs`
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+The [awesome-frames](https://github.com/polus-arcticus/awesome-frames) documentation site, built with [Docusaurus](https://docusaurus.io/). Content lives in `docs/`; see the [root README](../../README.md) for the rest of the monorepo.
 
-## Installation
-
-```bash
-npm install
-```
-
-**Note**: feel free to use the package manager of your choice.
-
-## Local Development
+## Local development
 
 ```bash
-npm run start
+pnpm docs:start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+Starts a local dev server with live reload. Or, from this directory directly:
+
+```bash
+pnpm start
+```
 
 ## Build
 
 ```bash
-npm run build
+pnpm docs:build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+Generates static content into `build/`, servable by any static host.
 
 ## Deployment
 
-Using SSH:
+Deploys to GitHub Pages (`polus-arcticus/awesome-frames`, `gh-pages` branch — see `organizationName`/`projectName`/`deploymentBranch` in `docusaurus.config.ts`):
 
 ```bash
-USE_SSH=true npm run deploy
+GIT_USER=<your GitHub username> pnpm deploy
 ```
 
-Not using SSH:
+Or, with SSH:
 
 ```bash
-GIT_USER=<Your GitHub username> npm run deploy
+USE_SSH=true pnpm deploy
 ```
-
-If you are using GitHub Pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

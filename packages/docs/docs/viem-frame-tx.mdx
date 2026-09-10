@@ -1,0 +1,73 @@
+---
+title: viem-frame-tx
+---
+
+# `viem-frame-tx`
+
+The RLP encoder for Frame transactions, published as its own package (`packages/viem-frame-tx`) with no dependency on the contracts package:
+
+- **`serializeFrameTransaction(tx)`** — the full `0x06`-prefixed envelope, ready for `sendRawTransaction`.
+- **`computeSigHash(tx)`** — the digest a signature commits to.
+
+It does **not** sign anything, and it does **not** hook into viem's `chain.serializers.transaction` extension point. That hook exists (the same escape hatch OP-Stack deposit txs and Celo's CIP-64 use), but its `signature` argument is populated by viem's single-ECDSA-account signing pipeline (`account.signTransaction` → `{r, s, v}`), which doesn't fit a Frame tx: a Frame tx carries a `signatures[]` **array**, keyed by scheme (`ARBITRARY`, `SECP256K1`, `P256`), attached *before* serialization — there's no single top-level signature to merge in after the fact.
+
+## The pattern
+
+1. Build your `FrameTransactionSerializable` with `signatures` left empty.
+2. Sign `computeSigHash(unsigned)` yourself, with whatever scheme you're using.
+3. Attach the result to `signatures`.
+4. Call `serializeFrameTransaction`.
+5. Submit the raw bytes with viem's ordinary `sendRawTransaction` — transport-only and type-agnostic, so it needs no Frame-tx-specific support at all.
+
+```ts
+import {serializeFrameTransaction, computeSigHash, SignatureScheme, ethrexTestnet} from 'viem-frame-tx';
+
+const unsigned = {
+  chainId: ethrexTestnet.id,
+  nonceKeys: [0n],
+  nonceSeq: 0n,
+  sender: account.address,
+  frames: [
+    /* ... your VERIFY/SENDER frames ... */
+  ],
+  signatures: [],
+  maxPriorityFeePerGas: 1_000_000_000n,
+  maxFeePerGas: 10_000_000_000n,
+};
+
+const sigHash = computeSigHash(unsigned);
+// sign sigHash with whatever scheme you're using — see the parent repo's
+// contracts/src/BIP340 for an ARBITRARY-scheme example — then attach it:
+const signed = {...unsigned, signatures: [{scheme: SignatureScheme.ARBITRARY, signer: null, msg: '0x', signature}]};
+
+const raw = serializeFrameTransaction(signed);
+await publicClient.sendRawTransaction({serializedTransaction: raw});
+```
+
+## Constants (`FrameMode`, `SignatureScheme`, ...)
+
+```ts
+export const FRAME_TX_TYPE = 0x06; // the EIP-2718 type byte
+
+export const FrameMode = {DEFAULT: 0, VERIFY: 1, SENDER: 2, UTXO: 5} as const;
+
+export const SignatureScheme = {
+  ARBITRARY: 0, // no protocol-level check — verified by your VERIFY frame's code
+  SECP256K1: 1, // 65 bytes: v || r || s
+  P256: 2, // 128 bytes: r || s || qx || qy
+} as const;
+```
+
+`signer: null` is required for `ARBITRARY` and means "resolves to `tx.sender`" for `SECP256K1`/`P256`. See the [EIP-8141 primer](./eip-8141.mdx) for the full field layout.
+
+## The `ethrexTestnet` chain
+
+A plain viem `Chain` for the only public Frame-tx-capable testnet that exists today (chain id `8141`) — nothing Frame-tx-specific about the chain object itself; submit `sendRawTransaction` normally once you've built and signed the raw bytes.
+
+## Known discrepancies
+
+Because this targets a Draft EIP on a fork of a fork, three different wire formats have been observed across: the published EIP text, ethrex's `main` branch, and the exact commit `ethrexTestnet` actually runs. The gas constants exported by this package (`FRAME_TX_INTRINSIC_COST`, `FRAME_TX_PER_FRAME_COST`, ...) are mirrored from that exact tested commit via `web3_clientVersion`, not from `main` or the EIP text — see the package's own README for the full breakdown before trusting any of the three as ground truth for a different target.
+
+## No built-in signing helpers
+
+`examples/self-transfer.ts` signs with `@noble/curves` directly (viem's own low-level `sign` isn't exported publicly). The parent repo's [BIP-340 signer](./recipes/nostr-frame-account.mdx) covers `ARBITRARY`, but there's no `viem-frame-tx`-level convenience for either `SECP256K1` or `P256` signing yet.

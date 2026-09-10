@@ -25,18 +25,30 @@ The public mempool's **validation trace rules** are the sharp edge to know about
 │   │   ├── BIP340/                  # BIP-340 (Nostr) Schnorr verification library
 │   │   ├── NostrFrameAccount/       # recipe #1: a VERIFY-frame account authorized by
 │   │   │                             #   a Nostr/BIP-340 Schnorr sig instead of ECDSA
+│   │   ├── YoloRSA/                 # deliberately-tiny textbook RSA verify library
+│   │   ├── LightningRSA/            # recipe #2: real, padded RSASSA-PKCS1-v1_5 verify library
+│   │   ├── LightningRSAAccount/     # recipe #2: a VERIFY-frame account authorized by
+│   │   │                             #   a real RSA-2048 signature
 │   │   └── grimoire/                # NOT Frame-tx recipes — a pedagogical-crypto corner,
 │   │                                 #   minimal asymmetric primitives written in raw Yul
-│   ├── scripts/                     # vector generation + the live end-to-end demo
+│   │       ├── ToyCurveECDH/        #   toy-curve ECDH, small enough to verify by hand
+│   │       └── YoloRSA/             #   deployable crackme wallets, a difficulty ladder,
+│   │                                 #   including wide (2-word) tiers past 256 bits
+│   ├── scripts/                     # vector generation + the live end-to-end demos
 │   ├── test/                        # solidity (forge-std) + TS (node:test/earl) tests
 │   ├── rocketh/                     # rocketh config (accounts, extensions)
 │   └── hardhat.config.ts            # includes the `ethrexTestnet` network (chainId 8141)
 ├── packages/
-│   └── viem-frame-tx/               # unofficial viem-based EIP-8141 encoder — own package,
-│                                     #   own README, no dependency on the contracts package
+│   ├── viem-frame-tx/               # unofficial viem-based EIP-8141 encoder — own package,
+│   │                                 #   own README, no dependency on the contracts package
+│   └── docs/                        # Docusaurus documentation site — see below
 ├── package.json                     # root monorepo configuration
 └── pnpm-workspace.yaml              # pnpm workspace definition
 ```
+
+## Documentation site
+
+`packages/docs` is a [Docusaurus](https://docusaurus.io/) site covering everything in this README in more depth, plus material this README doesn't have room for — the GNFS-based cost-estimation methodology behind `YoloRSA`'s wide tiers, and the EIP-8141 gas-budget math behind `LightningRSA`'s `e=3` choice, in particular. Run it locally with `pnpm docs:start`, or build the static site with `pnpm docs:build`.
 
 ## The testnet
 
@@ -63,6 +75,21 @@ Both files' header docstrings carry the full derivation, the traps that were hit
 - `contracts/scripts/gen-vectors.ts` / `gen-nostr-tools-vector.ts` — generate known-answer test vectors, one from `@noble/curves` directly, one from a real `nostr-tools`-signed event (an independent library, for a genuine cross-check).
 - `contracts/scripts/nostr-frame-demo.ts` — the end-to-end reference: compiles the Yul account, deploys it, signs a real Frame transaction with a Nostr key, submits it to `ethrexTestnet`, and confirms both the `VERIFY` and `SENDER` frames succeeded. This is the shape any new recipe's own demo script should follow.
 
+## Recipe #2: `LightningRSA`
+
+A self-verifying Frame account authorized by a **real RSASSA-PKCS1-v1_5/SHA-256 signature** (RFC 8017) — unlike the grimoire's `YoloRSA` (deliberately tiny, deliberately unpadded, never safe to use regardless of modulus size), this is meant to be sound at any modulus width an operator actually deploys with. Default target: RSA-2048. The verify math is derived and forge-tested first as a pure Solidity library — `contracts/src/LightningRSA/LightningRSA.sol`, checked against real signatures produced by Node's own `crypto` module, not this repo's own math — then re-inlined in the Yul account (`contracts/src/LightningRSAAccount/LightningRSAAccount.yul`) using only the `SHA256`/`MODEXP` precompiles.
+
+Two things worth knowing before reading the code:
+
+- **`n` is arbitrary width, not a fixed word count.** Solidity's own `bytes` type already gives full generality (the `MODEXP` precompile natively accepts arbitrary-length operands); the Yul account stores `n`/`e` appended directly after its own deployed runtime code (read back via cheap self-`CODECOPY` each call) rather than in storage, specifically because a real RSA-2048 modulus is 8 EVM words and `SLOAD`ing that many words is expensive enough to matter against EIP-8141's `MAX_VERIFY_GAS = 100,000` cap.
+- **The public exponent is `e = 3`, not the usual `65537`.** `MODEXP`'s EIP-2565 gas cost is priced from the *exponent's* bit length — at `e = 65537` a single RSA-2048 verify costs roughly 200,000 gas by that formula, over budget before anything else runs; at `e = 3` it's roughly 13,000. Low-exponent RSA has real historical forgery bugs, but every one of them targeted verifiers that leniently *parsed* padding out of the recovered value instead of reconstructing the expected block and comparing byte-for-byte — which is exactly the discipline this library follows throughout, closing that class regardless of `e`.
+
+The Yul translation of the (already forge-tested) padding/`MODEXP` logic is itself verified empirically, not just eyeballed: `contracts/test/yul/LightningRSAAccountVerifyHarness.yul` is a test-only mirror of the account's verify function with the EIP-8141-only witness-pulling swapped for plain calldata (so it's callable on Hardhat's ordinary network, unlike the real account), checked against the exact same real RSA-2048 vectors and confirmed to produce identical accept/reject verdicts to the Solidity original.
+
+- `contracts/test/js/utils/pkcs1.ts` — Node-crypto-backed keygen/sign/verify reference.
+- `contracts/scripts/gen-lightning-rsa-vectors.ts` → `contracts/test/vectors/lightning-rsa-vectors.json` — a fresh real RSA-2048 keypair every run; fine to commit (test fixtures only — a real deployment must generate its own keypair locally and never commit the private key).
+- `contracts/test/solidity/LightningRSA/LightningRSA.t.sol`, `contracts/test/js/LightningRSAAccount.test.ts` — known-answer vectors, negative cases, and an empirical gas-budget assertion (`assertLt(gasUsed, 100_000)`).
+
 ## Adding a new recipe
 
 A Frame account recipe is: a `VERIFY`-frame target contract, a signing scheme, and a script proving the round trip against a live (or simulated) Frame-tx-capable network.
@@ -82,6 +109,26 @@ First resident: **`ToyCurveECDH`** (`contracts/src/grimoire/ToyCurveECDH/ToyCurv
 - `contracts/scripts/gen-toy-curve-vectors.ts` → `contracts/test/vectors/toy-curve-vectors.json` — known-answer vectors, same discipline as the BIP-340 vectors above.
 - `contracts/test/js/ToyCurveECDH.test.ts` — deploys the compiled Yul to Hardhat's local network and checks it against the vectors plus a fresh, live two-party exchange.
 - `contracts/scripts/toy-curve-demo.ts` — a narrated Alice/Bob exchange, ending by brute-forcing Alice's private scalar back out of her public point, live, to make the "toy" part concrete: `pnpm contracts:execute local scripts/toy-curve-demo.ts`.
+
+### `YoloRSA`: deployable crackme wallets, a difficulty ladder
+
+A ladder of deliberately-weak textbook RSA "wallets" — deploy one, fund it with testnet ETH, publish nothing but its public key (baked directly into the contract's own bytecode), and see how long a stranger takes to factor the modulus, recover the private exponent, forge a signature, and drain it. Five tiers, each sized to a specific real-world cracking difficulty: `pencil` (mental trial division, ~12 bits) through `weekend-project` (needs a real factoring tool, ~248 bits — the largest this template supports, since `n` has to fit in a single 32-byte EVM word). One compiled account template (`YoloRSAAccount.yul`) is redeployed unmodified across every tier; only the constructor args (`e`, `n`) differ.
+
+- `contracts/src/YoloRSA/YoloRSA.sol` — the verify library (`s^e mod n == msgHash mod n`, via the `MODEXP` precompile), forge-tested against every tier.
+- `contracts/src/grimoire/YoloRSA/YoloRSAAccount.yul` — the deployable account, re-inlining that same check using only precompiles.
+- `contracts/test/js/utils/yoloRSA.ts` — both sides: keygen/sign/verify (the owner's), and `factor`/`crackPrivateExponent` (the attacker's — trial division, then Pollard's rho).
+- `contracts/scripts/gen-yolo-rsa-vectors.ts` → `contracts/test/vectors/yolo-rsa-vectors.json` — generates each tier's keypair and known-answer vectors, cracking every tier through `laptop` during generation itself as a sanity check.
+- `contracts/test/js/YoloRSA.test.ts` — pinned vectors plus a live sign → verify → crack → forge round trip.
+
+See the [docs site](packages/docs) for the padding-scheme caveat (no real padding fits at these moduli sizes, which is intentional) and the full difficulty table.
+
+**Wide tiers** extend the same ladder past 256 bits, for moduli that genuinely need to exceed a single EVM word — `n` and the signature witness each span two words (up to 512 bits) instead of one, using the `MODEXP` precompile's native arbitrary-length support. Tiers are sized against a stated, checkable attacker model — one Ethereum-validator-spec machine (ethereum.org's own CPU guidance) starting the instant a spend hits the mempool — using the actual GNFS sub-exponential cost function, not naive brute-force estimation: `ten-minute` (~384 bits) and `one-hour` (~424 bits), with the same 2-word template covering up to about a day (~502 bits) before a third word would be needed.
+
+- `contracts/src/grimoire/YoloRSA/YoloRSAWideAccount.yul` — the 2-word account template.
+- `contracts/test/js/utils/bigWord.ts` — generic big-endian word split/join, reusable for a future 3-word template.
+- `contracts/scripts/gen-yolo-rsa-wide-vectors.ts` → `contracts/test/vectors/yolo-rsa-wide-vectors.json`, `contracts/test/js/YoloRSAWide.test.ts` — same discipline as the base tiers'.
+
+The full GNFS cost-model derivation (the L-function, the RSA-768 calibration anchor, the validator-hardware assumption and its sensitivity) is documented on the [docs site](packages/docs), not repeated here. No modulus size makes unpadded RSA — either ladder — safe to actually use; that's what [Recipe #2: `LightningRSA`](#recipe-2-lightningrsa) is for.
 
 ## Initial Setup
 
