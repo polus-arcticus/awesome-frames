@@ -1,5 +1,5 @@
 {
-  "name": "template-ethereum-contracts-monorepo",
+  "name": "awesome-frames",
   "private": true,
   "type": "module",
   "devDependencies": {
@@ -27,9 +27,13 @@
     "contracts:compile:watch": "ldenv pnpm --filter ./contracts compile:watch",
     "contracts:build": "ldenv pnpm --filter ./contracts compile ~~ pnpm --filter ./contracts typescript ~~",
     "contracts:export": "pnpm --filter ./contracts export @@MODE @@",
+    "---------------------- FRAME-TX ----------------------": "",
+    "frame-tx:test": "pnpm --filter viem-frame-tx test",
+    "frame-tx:build": "pnpm --filter viem-frame-tx build",
+    "frame-tx:typescript": "pnpm --filter viem-frame-tx typescript",
     "---------------------- BUILD ----------------------": "",
-    "test": "pnpm contracts:test",
-    "build": "pnpm contracts:build",
+    "test": "pnpm contracts:test && pnpm frame-tx:test",
+    "build": "pnpm contracts:build && pnpm frame-tx:build",
     "---------------------- START ----------------------": "",
     "stop": "pnpm run --filter ./contracts stop",
     "start": "pnpm run --filter ./contracts start"

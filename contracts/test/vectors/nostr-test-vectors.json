@@ -1,0 +1,47 @@
+[
+  {
+    "description": "vector-0",
+    "px": "0x1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+    "pAddress": "0x963f1b893656c4a739ae1deb15f621b704c54022",
+    "message": "0xb2ab66db9a3ce11dd83dba85d66203fde36bb4715927ae4473098e422576ed22",
+    "rx": "0x4ab905e4c5b1737435feabd6d66f61c845747814adc58309baba7e17a0d9e027",
+    "s": "0x1c1591b30c75fb5f1de327fdfb6104e17473dd11046114dbd077ab3bc61d696e",
+    "valid": true
+  },
+  {
+    "description": "vector-1",
+    "px": "0x016c0067e606010592df0dad684354c87cbd2c448c389a52723a299eeb64f3ef",
+    "pAddress": "0xb3a49e713fadaf797dfd86fe9bdea3c8e1df7b57",
+    "message": "0x55c632b9d0111bf23aa8427ad3d3fb8c90336000a994e1c1b870d5bb871d287c",
+    "rx": "0x393e1ca49aafd9ad95ebbb7d73ba43a6bbf3dc7b0555182eae97cada82568e5e",
+    "s": "0x1e864110cba029c1b0ad2321f34a204f34a09943cab05acc26dc6544ed56660d",
+    "valid": true
+  },
+  {
+    "description": "vector-2",
+    "px": "0x43cfe80403e5426fa501bd083a5cb4dcd36c455f0f11d012c58cda333d475071",
+    "pAddress": "0xd2d7fafd6dded0ad00f4e7bd2c50edc65c1a9bf4",
+    "message": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "rx": "0x5d29ac7c41dc52e3f9921528663995f165b4fe87dbde1e85768f884677435816",
+    "s": "0x2ebea4ddb6b819bb1e32af6e2a16843a38a9eb9517baab17b4800681755c46c7",
+    "valid": true
+  },
+  {
+    "description": "nostr-tools-real-event",
+    "px": "0x4d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d0766",
+    "pAddress": "0x5050a4f4b3f9338c3472dcc01a87c76a144b3c9c",
+    "message": "0x0c96a2a033d62966daf3497e080424d69151c1126db8633b3efd8119bd860b88",
+    "rx": "0xd3a2bb06e6833e067d0c6ddc9ed4b1848ae0d2d209366e2ddb4a4248fa5d9a1e",
+    "s": "0x49fe5819e2e9e3e62bcb83a2da1487c49634130d62de42524b34da76a2220d75",
+    "valid": true,
+    "nostrEvent": {
+      "kind": 1,
+      "created_at": 1735689600,
+      "tags": [],
+      "content": "nostr-frame: BIP-340 ecrecover-trick cross-check vector — see BIP340.t.sol",
+      "pubkey": "4d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d0766",
+      "id": "0c96a2a033d62966daf3497e080424d69151c1126db8633b3efd8119bd860b88",
+      "sig": "d3a2bb06e6833e067d0c6ddc9ed4b1848ae0d2d209366e2ddb4a4248fa5d9a1e49fe5819e2e9e3e62bcb83a2da1487c49634130d62de42524b34da76a2220d75"
+    }
+  }
+]

@@ -74,6 +74,29 @@ const config: HardhatUserConfig = {
 								interval: 3000,
 							},
 						},
+						// ethrex privacy testnet (frames-enabled public testnet)
+						// explorer: https://dora.privacy.ethrex.xyz
+						// faucet: https://faucet.privacy.ethrex.xyz/artifacts
+						ethrexTestnet: {
+							type: 'http',
+							chainId: 8141, // 0x1fcd
+							url:
+								process.env.ETH_NODE_URI_ethrexTestnet ||
+								'https://rpc1.privacy.ethrex.xyz',
+							// PRIVATE_KEY_ethrexTestnet, when set, is a funded throwaway
+							// key (see packages/viem-frame-tx/examples/self-transfer.ts)
+							// — takes priority so `deployer` resolves to an account
+							// that's actually funded on this testnet, not the
+							// mnemonic's unfunded default.
+							accounts: process.env.PRIVATE_KEY_ethrexTestnet
+								? [process.env.PRIVATE_KEY_ethrexTestnet]
+								: {
+										mnemonic:
+											process.env.MNEMONIC_ethrexTestnet ||
+											process.env.MNEMONIC ||
+											'test test test test test test test test test test test junk',
+									},
+						},
 					},
 				),
 			),

@@ -1,0 +1,36 @@
+{
+	"name": "viem-frame-tx",
+	"version": "0.0.1",
+	"description": "Unofficial viem-based encoder for EIP-8141 frame transactions (type 0x06) — RLP serialization + sig-hash computation, ground-truthed against ethrex's reference implementation. No native viem support exists yet; use this directly rather than through viem's chain.serializers.transaction pipeline.",
+	"type": "module",
+	"license": "Unlicense",
+	"private": true,
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist",
+		"src"
+	],
+	"scripts": {
+		"build": "tsc",
+		"typescript": "tsc -p tsconfig.check.json",
+		"test": "tsx --test test/*.test.ts",
+		"format:check": "prettier --check .",
+		"format": "prettier --write ."
+	},
+	"peerDependencies": {
+		"viem": "^2.55.19"
+	},
+	"devDependencies": {
+		"@noble/curves": "^1.9.1",
+		"@types/node": "^26.2.0",
+		"prettier": "^3.9.6",
+		"tsx": "^4.23.12",
+		"typescript": "~6.0.3",
+		"viem": "^2.55.19"
+	}
+}
