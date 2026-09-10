@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" role="img" aria-label="awesome-frames logo">
+  <g fill="none" stroke="#a89cf5" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 14 V4 H14" />
+    <path d="M26 4 H36 V14" />
+    <path d="M36 26 V36 H26" />
+    <path d="M14 36 H4 V26" />
+  </g>
+  <circle cx="20" cy="20" r="3.6" fill="#a89cf5" />
+</svg>

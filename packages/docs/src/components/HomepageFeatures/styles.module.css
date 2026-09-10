@@ -1,0 +1,33 @@
+.features {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.feature {
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.feature:hover {
+  transform: translateY(-4px);
+}
+
+.featureIcon {
+  color: var(--ifm-color-primary);
+  margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.feature:hover .featureIcon {
+  color: var(--ifm-color-primary-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature,
+  .featureIcon {
+    transition: none;
+  }
+}
