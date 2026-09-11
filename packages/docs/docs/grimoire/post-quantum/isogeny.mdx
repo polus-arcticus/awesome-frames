@@ -1,0 +1,30 @@
+---
+title: Isogeny-based (docs only)
+---
+
+# Isogeny-based: CSIDH's design, and why SIDH fell
+
+No code this pass — the one family in this survey scoped as prose-only from the start, and confirmed as the right call once the tractability was actually assessed. Real toy isogeny code needs Vélu's-formula isogeny computation over extension fields, and — for reproducing anything shaped like the actual 2022 SIDH break — genus-2 Jacobian arithmetic via theta functions. That's a research-grade reimplementation, not a survey-pass item; the original attack code is SageMath specifically because it leans on finite-field-extension and genus-2 curve tooling that doesn't exist in plain JS/bigint.
+
+## The shared idea: walking a graph of curves
+
+Supersingular elliptic curves over a finite field form a graph, where an edge is an *isogeny* — a specific kind of map between two curves. Both SIDH and CSIDH build a key-exchange protocol on top of this graph, but via genuinely different structures:
+
+- **SIDH** (Supersingular Isogeny Diffie-Hellman): each party walks a *secret path* through the graph, using large-degree isogenies built from two fixed, small primes (traditionally `2` and `3`). To let the other party *continue* the walk without knowing the secret path, SIDH publishes the images of specific auxiliary torsion points alongside each party's curve — exactly the information that turned out to be the scheme's undoing.
+- **CSIDH** (Commutative SIDH): uses *ordinary* (not supersingular-with-extra-structure) curves over a prime field, where the class group of a specific quadratic order acts on the set of curves — a "Hard Homogeneous Space." Both parties apply a secret *class-group element* (not a curve-graph walk) to a fixed starting curve, and the action commutes — enabling a Diffie-Hellman-shaped exchange without ever publishing anything like SIDH's auxiliary torsion points.
+
+## Why SIDH fell: the auxiliary points were the whole problem
+
+In 2022, Wouter Castryck and Thomas Decru published an attack that recovers a party's secret isogeny walk directly from the published auxiliary torsion-point images — using Ernst Kani's "glue-and-split" theorem to reconstruct information about the secret from those points via genus-2 curve arithmetic. A follow-up by Damien Robert generalized and sped up the attack. The result: SIDH (and its NIST-candidate incarnation, SIKE) went from a serious, actively-standardized finalist to broken in practical time on ordinary hardware, within weeks — one of the more dramatic collapses in the whole NIST PQC process.
+
+**CSIDH was not broken by this attack.** It has no auxiliary torsion points to publish at all — the class-group-action structure is fundamentally different, with no analog of the exact information Castryck-Decru's construction needs. CSIDH still has other real practical concerns (it's slower, and its own security margins have been debated), but this specific collapse doesn't apply to it. That contrast — same high-level idea (walk a graph of curves for a DH-shaped exchange), one structural choice made the scheme's exposed information exploitable and the other didn't — is the actual pedagogical payoff of this family, even without running code.
+
+## A stated stretch goal for a future pass
+
+Not attempted this round: a *single* Vélu isogeny step over a tiny `F_p` — computing one actual isogeny between two small supersingular curves, without a full two-party exchange. That's a meaningfully smaller lift than either full protocol, and would be the natural next foothold if this family gets picked up again.
+
+## References
+
+- Castryck, W. and Decru, T. (2022). *An efficient key recovery attack on SIDH.*
+- Robert, D. (2022). *Breaking SIDH in polynomial time.*
+- Beullens, W. et al. (2023). CSIDH design and analysis references, per the original CSIDH paper (Castryck, Lange, Martindale, Panny, Renes).

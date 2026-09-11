@@ -19,11 +19,25 @@ const sidebars: SidebarsConfig = {
 			link: {type: 'doc', id: 'grimoire/index'},
 			items: [
 				'grimoire/toy-curve-ecdh',
+				'grimoire/stark-pedersen',
 				{
 					type: 'category',
 					label: 'YoloRSA',
 					link: {type: 'doc', id: 'grimoire/yolo-rsa'},
 					items: ['grimoire/yolo-rsa-wide'],
+				},
+				{
+					type: 'category',
+					label: 'Post-quantum survey',
+					link: {type: 'doc', id: 'grimoire/post-quantum/index'},
+					items: [
+						'grimoire/post-quantum/ml-kem',
+						'grimoire/post-quantum/lamport',
+						'grimoire/post-quantum/falcon',
+						'grimoire/post-quantum/ml-dsa',
+						'grimoire/post-quantum/mceliece',
+						'grimoire/post-quantum/isogeny',
+					],
 				},
 			],
 		},

@@ -1,6 +1,6 @@
 /// @title LightningRSAAccountVerifyHarness
 /// @notice TEST-ONLY. Not a recipe, not deployed anywhere real — a mirror
-/// of src/LightningRSAAccount/LightningRSAAccount.yul's verify math
+/// of src/LightningRSA/LightningRSAAccount.yul's verify math
 /// (readKeyHeader / verifyLightningRSAInner, copied verbatim) with the
 /// EIP-8141-only witness-pulling (SIGDATACOPY/TXPARAM/APPROVE) swapped out
 /// for plain calldata, so it's callable and testable on Hardhat's ordinary

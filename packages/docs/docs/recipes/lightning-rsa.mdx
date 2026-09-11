@@ -68,7 +68,7 @@ Plus `LightningRSAAccount.test.ts`, which deploys the real account (not the harn
 ## Layout
 
 - `contracts/src/LightningRSA/LightningRSA.sol` — the verify library.
-- `contracts/src/LightningRSAAccount/LightningRSAAccount.yul` — the deployable account.
+- `contracts/src/LightningRSA/LightningRSAAccount.yul` — the deployable account.
 - `contracts/test/js/utils/pkcs1.ts` — Node-crypto-backed keygen/sign/verify reference.
 - `contracts/scripts/gen-lightning-rsa-vectors.ts` → `contracts/test/vectors/lightning-rsa-vectors.json` — regenerate any time; a **fresh** keypair every run, fine to commit (these are test fixtures — a real deployment must generate its own keypair locally and never commit the private key, same rule as every other recipe and grimoire entry here).
 - `contracts/test/solidity/LightningRSA/LightningRSA.t.sol`, `contracts/test/js/LightningRSAAccount.test.ts`, `contracts/test/yul/LightningRSAAccountVerifyHarness.yul`.

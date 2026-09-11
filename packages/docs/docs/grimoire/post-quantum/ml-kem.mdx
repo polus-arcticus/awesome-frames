@@ -1,0 +1,35 @@
+---
+title: MlKem
+---
+
+# `MlKem` — ML-KEM-512 (FIPS 203)
+
+A real, full-size key-encapsulation mechanism — not a shrunk toy. Where `ToyCurveECDH`/`YoloRSA` earn their pedagogy by shrinking a real scheme down to hand-verifiable size, that move doesn't work here: Module-LWE's hardness genuinely depends on the ring dimension (n=256) and modulus (q=3329) FIPS 203 specifies. Shrink either and there's no meaningful hard problem left, only a broken toy. So this runs the real algorithm at real size, and earns its grimoire place a different way: every function is commented with its exact FIPS 203 algorithm number, derived directly from the primary standard (`NIST.FIPS.203`, csrc.nist.gov) — not from memory, not from reading an existing implementation's source.
+
+## The hard problem
+
+Module-LWE: given a public matrix `Â` and a "noisy" linear system `t̂ = Â∘ŝ + ê` (`ŝ`, `ê` small and secret), recovering `ŝ` is believed hard — the noise `ê` defeats Gaussian elimination. Encryption (K-PKE) encodes one bit per coefficient of a 256-coefficient polynomial by nudging a combined noisy equation either close to `0` (bit 0) or close to `q/2` (bit 1) — `Compress`/`Decompress`'s entire reason to exist is deciding how much of that nudge survives lossy serialization without the coefficient crossing to the wrong side of `q/2`.
+
+ML-KEM = K-PKE (not IND-CCA2-secure alone — FIPS 203 §3.3 is explicit that K-PKE "shall not" be used standalone) wrapped in a Fujisaki-Okamoto transform: decapsulation re-encrypts and checks the ciphertext matches, falling back to a pseudorandom "implicit rejection" value on mismatch rather than ever raising a distinguishable decryption error — the error itself would otherwise leak information, a real historical attack class against padding-oracle-style schemes.
+
+## Three details easy to get wrong from memory alone
+
+Checked against the actual FIPS 203 PDF before being trusted:
+
+1. **`G(d‖k)`** — the module dimension `k` (2 for ML-KEM-512) is appended as a literal byte-33 domain separator before hashing, not just `G(d)`.
+2. **`SampleNTT(ρ‖j‖i)`** — the matrix-generation seed uses `j` then `i` (column, then row) — transposed from the naive guess.
+3. **`Â` vs. `Â^T`** — `K-PKE.KeyGen` uses `Â` directly; `K-PKE.Encrypt` uses `Â^T`. Getting this backwards produces a scheme that's internally self-consistent but wrong.
+
+## Why the NTT needs a "base case" multiply
+
+`x^256+1` doesn't split into 256 linear factors mod `q=3329` (that needs `q ≡ 1 mod 512`; `3329-1=3328` isn't a multiple of 512) — it splits into 128 *quadratic* factors instead. Polynomial multiplication in the transformed domain needs a degree-2 base-case multiply (`MultiplyNTTs`/`BaseCaseMultiply`), not simple pointwise multiplication — the one place this NTT differs from a textbook full NTT.
+
+## Verified byte-exact, both directions
+
+`scripts/gen-ml-kem-vectors.ts` doesn't just check that this repo's own `keygen`/`encapsulate`/`decapsulate` round-trip internally — it checks every field (`ek`, `dk`, `cipherText`, `sharedSecret`) against `@noble/post-quantum`'s `ml_kem512`, from the *same* seed/randomness, and checks cross-interoperability in both directions: this repo's `decapsulate` reading a noble-produced ciphertext, and noble's `decapsulate` reading this repo's. Plus the implicit-rejection (tampered-ciphertext) path, which also matches noble's fallback value exactly.
+
+## Layout
+
+- `contracts/src/grimoire/post-quantum/MlKem/mlKem.ts` — the implementation.
+- `contracts/scripts/gen-ml-kem-vectors.ts` → `contracts/test/vectors/ml-kem-vectors.json`.
+- `contracts/test/js/MlKem.test.ts` — pinned vectors plus a live round trip cross-checked against `@noble/post-quantum` directly.

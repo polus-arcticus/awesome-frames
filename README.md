@@ -25,15 +25,17 @@ The public mempool's **validation trace rules** are the sharp edge to know about
 │   │   ├── BIP340/                  # BIP-340 (Nostr) Schnorr verification library
 │   │   ├── NostrFrameAccount/       # recipe #1: a VERIFY-frame account authorized by
 │   │   │                             #   a Nostr/BIP-340 Schnorr sig instead of ECDSA
-│   │   ├── YoloRSA/                 # deliberately-tiny textbook RSA verify library
-│   │   ├── LightningRSA/            # recipe #2: real, padded RSASSA-PKCS1-v1_5 verify library
-│   │   ├── LightningRSAAccount/     # recipe #2: a VERIFY-frame account authorized by
-│   │   │                             #   a real RSA-2048 signature
+│   │   ├── LightningRSA/            # recipe #2: verify library + account together (unlike
+│   │   │                             #   BIP340/NostrFrameAccount's split — LightningRSA.sol
+│   │   │                             #   has no reuse outside its own account)
 │   │   └── grimoire/                # NOT Frame-tx recipes — a pedagogical-crypto corner,
-│   │                                 #   minimal asymmetric primitives written in raw Yul
+│   │                                 #   minimal asymmetric primitives, mostly in raw Yul
 │   │       ├── ToyCurveECDH/        #   toy-curve ECDH, small enough to verify by hand
-│   │       └── YoloRSA/             #   deployable crackme wallets, a difficulty ladder,
-│   │                                 #   including wide (2-word) tiers past 256 bits
+│   │       ├── StarkPedersen/       #   Starknet's real Pedersen hash, on-chain in Yul
+│   │       ├── YoloRSA/             #   verify library + deployable crackme wallets, a
+│   │       │                         #   difficulty ladder including wide (2-word) tiers
+│   │       └── post-quantum/        #   JS-only PQC survey: MlKem, Lamport, Falcon,
+│   │                                 #   MlDsa, ClassicMcEliece (no on-chain accounts yet)
 │   ├── scripts/                     # vector generation + the live end-to-end demos
 │   ├── test/                        # solidity (forge-std) + TS (node:test/earl) tests
 │   ├── rocketh/                     # rocketh config (accounts, extensions)
@@ -85,7 +87,7 @@ Both files' header docstrings carry the full derivation, the traps that were hit
 
 ## Recipe #2: `LightningRSA`
 
-A self-verifying Frame account authorized by a **real RSASSA-PKCS1-v1_5/SHA-256 signature** (RFC 8017) — unlike the grimoire's `YoloRSA` (deliberately tiny, deliberately unpadded, never safe to use regardless of modulus size), this is meant to be sound at any modulus width an operator actually deploys with. Default target: RSA-2048. The verify math is derived and forge-tested first as a pure Solidity library — `contracts/src/LightningRSA/LightningRSA.sol`, checked against real signatures produced by Node's own `crypto` module, not this repo's own math — then re-inlined in the Yul account (`contracts/src/LightningRSAAccount/LightningRSAAccount.yul`) using only the `SHA256`/`MODEXP` precompiles.
+A self-verifying Frame account authorized by a **real RSASSA-PKCS1-v1_5/SHA-256 signature** (RFC 8017) — unlike the grimoire's `YoloRSA` (deliberately tiny, deliberately unpadded, never safe to use regardless of modulus size), this is meant to be sound at any modulus width an operator actually deploys with. Default target: RSA-2048. The verify math is derived and forge-tested first as a pure Solidity library — `contracts/src/LightningRSA/LightningRSA.sol`, checked against real signatures produced by Node's own `crypto` module, not this repo's own math — then re-inlined in the Yul account (`contracts/src/LightningRSA/LightningRSAAccount.yul`) using only the `SHA256`/`MODEXP` precompiles.
 
 Two things worth knowing before reading the code:
 
@@ -109,7 +111,7 @@ A Frame account recipe is: a `VERIFY`-frame target contract, a signing scheme, a
 
 ## The grimoire: cryptography as poetry
 
-`contracts/src/grimoire/` is a separate, deliberately-insecure track — not Frame-tx recipes, an excuse to get fluent in raw Yul by implementing classic asymmetric primitives directly, as legibly as the language allows. Yul's identifier grammar is ASCII-only (verified directly against this repo's `solc` — a Han-character function name is a hard `ParserError`, not a style choice), so each contract's "poetry" lives beside the code rather than inside it: ASCII-pinyin function names, each paired in a header-comment glossary with the character it transliterates, its pronunciation, and its literal meaning.
+`contracts/src/grimoire/` is a separate, deliberately-insecure track — not Frame-tx recipes, an excuse to get fluent in raw Yul (and, in the post-quantum survey below, plain TypeScript) by implementing classic and modern asymmetric primitives directly, as legibly as the language allows. Yul's identifier grammar is ASCII-only (verified directly against this repo's `solc` — a Han-character function name is a hard `ParserError`, not a style choice), so each Yul contract's "poetry" lives beside the code rather than inside it: ASCII-pinyin function names, each paired in a header-comment glossary with the character it transliterates, its pronunciation, and its literal meaning.
 
 First resident: **`ToyCurveECDH`** (`contracts/src/grimoire/ToyCurveECDH/ToyCurveECDH.yul`) — elliptic-curve Diffie-Hellman over `y² = x³ + 2x + 2 (mod 17)`, the textbook toy curve from Hankerson/Menezes/Vanstone's *Guide to Elliptic Curve Cryptography*. Its group has prime order 19 — small enough to enumerate and print on one page, which is the entire point: the same chord-and-tangent geometry that powers this repo's real secp256k1/BIP-340 work (`BIP340.sol`, `NostrFrameAccount.yul`), shrunk down until a curious reader can verify it by hand, and small enough that recovering a private scalar from its public point is a nineteen-iteration `for` loop, not a research problem. Needs none of EIP-8141's opcodes — it's ordinary point arithmetic, testable entirely against a local simulated network, no live testnet or funded key required.
 
@@ -118,11 +120,20 @@ First resident: **`ToyCurveECDH`** (`contracts/src/grimoire/ToyCurveECDH/ToyCurv
 - `contracts/test/js/ToyCurveECDH.test.ts` — deploys the compiled Yul to Hardhat's local network and checks it against the vectors plus a fresh, live two-party exchange.
 - `contracts/scripts/toy-curve-demo.ts` — a narrated Alice/Bob exchange, ending by brute-forcing Alice's private scalar back out of her public point, live, to make the "toy" part concrete: `pnpm contracts:execute local scripts/toy-curve-demo.ts`.
 
+### `StarkPedersen`: Starknet's real Pedersen hash, on Ethereum
+
+Unlike `ToyCurveECDH`, every number here is a **real** Starknet constant, not shrunk for legibility — the STARK-friendly curve (`y² = x³ + x + b mod (2^251 + 17·2^192 + 1)`), the field, and the five "nothing up my sleeve" generator points are exactly what a Starknet node uses. Prompted by a local Cairo project (ScarabSign) that leans on this exact primitive for peer-to-peer signature aggregation — this is the first grimoire step toward verifying Starknet-flavored signatures on Ethereum, not that verification itself. Cross-checked byte-for-byte against [`@scure/starknet`](https://www.npmjs.com/package/@scure/starknet), the same paulmillr/noble-family ground truth already trusted elsewhere in this repo. Measured gas for one `pedersen(x, y)` call: ~2.7M — real cost, comfortably practical, and a concrete data point in the long-running "should Ethereum have a Pedersen/Poseidon precompile" debate ([EIP-5988](https://eips.ethereum.org/EIPS/eip-5988) is stagnant).
+
+- `contracts/src/grimoire/StarkPedersen/StarkPedersen.yul` — the contract.
+- `contracts/test/js/utils/starkPedersen.ts` — the independent JS/bigint mirror.
+- `contracts/scripts/gen-stark-pedersen-vectors.ts` → `contracts/test/vectors/stark-pedersen-vectors.json` — known-answer vectors, verified against `@scure/starknet` and the curve equation itself before being pinned.
+- `contracts/test/js/StarkPedersen.test.ts` — pinned vectors, a fresh cross-check against `@scure/starknet`, both correctness guards (out-of-range inputs, the same-x-coordinate collision guard), and the real measured gas cost.
+
 ### `YoloRSA`: deployable crackme wallets, a difficulty ladder
 
 A ladder of deliberately-weak textbook RSA "wallets" — deploy one, fund it with testnet ETH, publish nothing but its public key (baked directly into the contract's own bytecode), and see how long a stranger takes to factor the modulus, recover the private exponent, forge a signature, and drain it. Five tiers, each sized to a specific real-world cracking difficulty: `pencil` (mental trial division, ~12 bits) through `weekend-project` (needs a real factoring tool, ~248 bits — the largest this template supports, since `n` has to fit in a single 32-byte EVM word). One compiled account template (`YoloRSAAccount.yul`) is redeployed unmodified across every tier; only the constructor args (`e`, `n`) differ.
 
-- `contracts/src/YoloRSA/YoloRSA.sol` — the verify library (`s^e mod n == msgHash mod n`, via the `MODEXP` precompile), forge-tested against every tier.
+- `contracts/src/grimoire/YoloRSA/YoloRSA.sol` — the verify library (`s^e mod n == msgHash mod n`, via the `MODEXP` precompile), forge-tested against every tier.
 - `contracts/src/grimoire/YoloRSA/YoloRSAAccount.yul` — the deployable account, re-inlining that same check using only precompiles.
 - `contracts/test/js/utils/yoloRSA.ts` — both sides: keygen/sign/verify (the owner's), and `factor`/`crackPrivateExponent` (the attacker's — trial division, then Pollard's rho).
 - `contracts/scripts/gen-yolo-rsa-vectors.ts` → `contracts/test/vectors/yolo-rsa-vectors.json` — generates each tier's keypair and known-answer vectors, cracking every tier through `laptop` during generation itself as a sanity check.
@@ -137,6 +148,17 @@ See the [docs site](packages/docs) for the padding-scheme caveat (no real paddin
 - `contracts/scripts/gen-yolo-rsa-wide-vectors.ts` → `contracts/test/vectors/yolo-rsa-wide-vectors.json`, `contracts/test/js/YoloRSAWide.test.ts` — same discipline as the base tiers'.
 
 The full GNFS cost-model derivation (the L-function, the RSA-768 calibration anchor, the validator-hardware assumption and its sensitivity) is documented on the [docs site](packages/docs), not repeated here. No modulus size makes unpadded RSA — either ladder — safe to actually use; that's what [Recipe #2: `LightningRSA`](#recipe-2-lightningrsa) is for.
+
+### Post-quantum survey
+
+Prompted by a Vitalik Buterin post surveying post-quantum cryptography families — off-chain/JS only this pass (PQC's building blocks mostly have no EVM precompile analog the way RSA/EC map onto `MODEXP`/`ecrecover`), and scoped honestly rather than evenly: six concrete schemes, each taken as far as it's actually tractable to derive correctly, not six half-finished attempts.
+
+- **`MlKem`** (`contracts/src/grimoire/post-quantum/MlKem/`) — real ML-KEM-512 (FIPS 203), full size, nothing shrunk (Module-LWE's hardness depends on the real dimension/modulus). Byte-exact against `@noble/post-quantum` on every field, both cross-decapsulation directions, plus the implicit-rejection edge case.
+- **`Lamport`** (`.../Lamport/`) — one-time hash-based signatures, full keygen/sign/verify, plus a real forgery: two live signatures over complementary digests reused into a signature over a digest that was never signed.
+- **`Falcon`** (`.../Falcon/`) — verify-only. Falcon *signing* needs floating-point Gaussian sampling, a real hazard NIST's own FIPS 206 status updates cite as the reason Falcon's standardization is taking longer than ML-KEM's/ML-DSA's (FIPS 206 is still Draft as of this writing). Verification is pure integer arithmetic — derived from the original, stable Falcon submission spec, checked against real signatures from `@noble/post-quantum`.
+- **`MlDsa`** (`.../MlDsa/`) — conceptual only: real FIPS 204 parameters, no working code. Documents why ML-DSA needed more than `MlKem`'s slot (Fiat-Shamir-with-Aborts, bit decomposition, hint-bit compression) rather than shipping a rushed partial implementation.
+- **`ClassicMcEliece`** (`.../ClassicMcEliece/`) — a stretch goal that landed: a real toy binary Goppa code (GF(16), n=15, k=7, t=2) wrapped in actual McEliece key-scrambling, decoded via a brute-force syndrome lookup table standing in for Patterson's algorithm. Verified exhaustively — all 128 possible messages, fresh keypair each time.
+- **Isogeny-based** — docs only, on the [docs site](packages/docs): CSIDH's design and the actual 2022 Castryck–Decru break of SIDH. Real isogeny arithmetic was assessed as a research-grade lift, not a survey-pass item.
 
 ## Initial Setup
 

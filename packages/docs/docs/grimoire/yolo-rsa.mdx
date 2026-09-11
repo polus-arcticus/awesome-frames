@@ -52,7 +52,7 @@ The deployable Yul account (`YoloRSAAccount.yul`) re-inlines this exact check us
 
 ## Layout
 
-- `contracts/src/YoloRSA/YoloRSA.sol` — the verify library, forge-tested (`test/solidity/YoloRSA/YoloRSA.t.sol`) against every tier's known-answer vectors.
+- `contracts/src/grimoire/YoloRSA/YoloRSA.sol` — the verify library, forge-tested (`test/solidity/YoloRSA/YoloRSA.t.sol`) against every tier's known-answer vectors.
 - `contracts/src/grimoire/YoloRSA/YoloRSAAccount.yul` — the deployable account. Storage slot 0 = `e`, slot 1 = `n`; constructor takes both as two right-aligned words appended after initcode.
 - `contracts/test/js/utils/yoloRSA.ts` — keygen, sign, verify, factor, crack — pure bigint, no EVM.
 - `contracts/scripts/gen-yolo-rsa-vectors.ts` → `contracts/test/vectors/yolo-rsa-vectors.json` — regenerate any time; these are test fixtures, safe to commit. A real deployed challenge must generate its own keypair locally and never commit `d`.

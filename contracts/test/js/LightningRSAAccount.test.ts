@@ -1,4 +1,4 @@
-// Tests the parts of src/LightningRSAAccount/LightningRSAAccount.yul that
+// Tests the parts of src/LightningRSA/LightningRSAAccount.yul that
 // DON'T need EIP-8141 opcodes and so ARE testable on Hardhat's ordinary
 // local network: the constructor's self-code-embedding ([n][e][nLen]
 // appended after the runtime code, via CODECOPY rather than SSTORE — see
@@ -71,7 +71,7 @@ describe('LightningRSAAccount — self-code-embedding constructor + getters', fu
 		const [wallet] = await viem.getWalletClients();
 		const publicClient = await viem.getPublicClient();
 		const yulPath = fileURLToPath(
-			new URL('../../src/LightningRSAAccount/LightningRSAAccount.yul', import.meta.url),
+			new URL('../../src/LightningRSA/LightningRSAAccount.yul', import.meta.url),
 		);
 		const initBytecode = compileYul(yulPath);
 		const args = encodeConstructorArgs(vectorsJson.n as Hex, BigInt(vectorsJson.e));

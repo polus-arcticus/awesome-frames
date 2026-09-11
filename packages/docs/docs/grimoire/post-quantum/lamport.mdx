@@ -1,0 +1,25 @@
+---
+title: Lamport
+---
+
+# `Lamport` — one-time signatures
+
+Hash-based, not lattice/code/isogeny-based like the rest of this survey. Filed under Vitalik's "even more esoteric" bucket, which is a little ironic on inspection: hash-based signatures are the *most conservative* PQC family there is — security reduces entirely to the preimage resistance of a hash function, no number-theoretic or algebraic hardness assumption at all. "Esoteric" here means "structurally foreign to this repo's algebraic mainstream" (`ToyCurveECDH`/`YoloRSA`/`LightningRSA`/`MlKem` all lean on some ring or curve), not "obscure or fragile" — if anything, this is the one entry in the whole survey nobody seriously doubts the security model of.
+
+## The mechanism (Lamport, 1979)
+
+The secret key is `2·N_BITS` random preimages, arranged as two parallel arrays (`zero[i]`, `one[i]`) — one pair per bit of whatever digest you're signing. The public key is each preimage hashed once. To sign, reveal `secretKey.zero[i]` for every bit that's 0, `secretKey.one[i]` for every bit that's 1 — exactly `N_BITS` of the `2·N_BITS` secrets, never both halves of any pair. To verify, hash each revealed preimage and check it matches the corresponding public value.
+
+`N_BITS = 32`, not the usual 256: a real Lamport keypair signs a full hash digest (256 bits → 256 pairs → 512 total secrets) — secure, but too large to print and eyeball. Shrinking `N_BITS` keeps the *preimages themselves* at a real, secure width (32 bytes each, hashed with real `keccak256`) while cutting the *bit count being signed* down to something a reader can hold in their head: 32 pairs, 64 secret values, 64 public values. Same "shrink until human-scale, keep the real primitive" move `YoloRSA` makes with its RSA moduli.
+
+## A genuinely different shape of fragility
+
+Every other resident here breaks because its *parameters* are small. A correctly-sized Lamport keypair never breaks from parameter size at all — it breaks the moment the **same keypair signs a second digest**. An attacker holding two signatures has, for every bit position where the two digests disagree, *both* halves of that pair's secret. Once enough pairs leak both halves, a signature over a third, never-signed digest can be forged outright.
+
+`forgeFromTwoSignatures` is that attack, not an approximation of it: sign a digest and its bitwise complement (guaranteeing full preimage coverage across all 32 positions), and a signature over *any* third digest forges immediately — proven in the test suite by actually doing it, then calling `verify()` on the result, the same "the generator actually factors it" discipline `YoloRSA`'s vector generator applies to its own weak tiers.
+
+## Layout
+
+- `contracts/src/grimoire/post-quantum/Lamport/lamport.ts` — `keygen`/`sign`/`verify`/`forgeFromTwoSignatures`.
+- `contracts/scripts/gen-lamport-vectors.ts` → `contracts/test/vectors/lamport-vectors.json` — includes a pinned forgery vector.
+- `contracts/test/js/Lamport.test.ts` — pinned vectors, a live sign/verify round trip, and a live forgery.

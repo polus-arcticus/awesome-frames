@@ -1,5 +1,5 @@
 // Pure-JS/bigint mirror of the (deliberately broken) textbook RSA
-// implemented in src/YoloRSA/YoloRSA.sol and re-inlined in
+// implemented in src/grimoire/YoloRSA/YoloRSA.sol and re-inlined in
 // src/grimoire/YoloRSA/YoloRSAAccount.yul — see YoloRSA.sol's header for
 // the padding-scheme caveat this all inherits. Covers both sides of the
 // exercise: keygen/sign (the wallet owner's side, entirely off-chain, a

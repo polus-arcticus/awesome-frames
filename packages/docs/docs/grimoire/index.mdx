@@ -4,15 +4,19 @@ title: The grimoire
 
 # The grimoire: cryptography as poetry
 
-`contracts/src/grimoire/` is a separate, deliberately-insecure track — not Frame-tx recipes, an excuse to get fluent in raw Yul by implementing classic asymmetric primitives directly, as legibly as the language allows.
+`contracts/src/grimoire/` is a separate, deliberately-insecure track — not Frame-tx recipes, an excuse to get fluent in raw Yul (and, in the [post-quantum survey](./post-quantum/index.mdx), plain TypeScript) by implementing classic and modern asymmetric primitives directly, as legibly as the language allows.
 
-Yul's identifier grammar is ASCII-only (verified directly against this repo's `solc` — a Han-character function name is a hard `ParserError`, not a style choice), so each contract's "poetry" lives beside the code rather than inside it: ASCII-pinyin function names, each paired in a header-comment glossary with the character it transliterates, its pronunciation, and its literal meaning.
+Yul's identifier grammar is ASCII-only (verified directly against this repo's `solc` — a Han-character function name is a hard `ParserError`, not a style choice), so each Yul contract's "poetry" lives beside the code rather than inside it: ASCII-pinyin function names, each paired in a header-comment glossary with the character it transliterates, its pronunciation, and its literal meaning. The post-quantum entries are JS-only (see their own index page for why) and don't follow this convention.
 
 ## Residents
 
 ### [`ToyCurveECDH`](./toy-curve-ecdh.mdx)
 
 Elliptic-curve Diffie-Hellman over `y² = x³ + 2x + 2 (mod 17)` — the textbook toy curve from Hankerson/Menezes/Vanstone's *Guide to Elliptic Curve Cryptography*. Its group has prime order 19: small enough to enumerate and print on one page, and small enough that recovering a private scalar from its public point is a nineteen-iteration `for` loop, not a research problem.
+
+### [`StarkPedersen`](./stark-pedersen.mdx)
+
+Starknet's actual Pedersen hash — real curve, real field, real "nothing up my sleeve" generator points, implemented in Yul rather than shrunk to toy scale. The first grimoire step toward verifying Starknet-flavored signatures on Ethereum, prompted by a local Cairo project (ScarabSign) that leans on this exact primitive for peer-to-peer signature aggregation. Measured gas for one call: ~2.7M — real cost, but comfortably practical, and a concrete data point in the long-running "should Ethereum have a Pedersen/Poseidon precompile" debate.
 
 ### [`YoloRSA`](./yolo-rsa.mdx)
 
@@ -21,6 +25,10 @@ A five-tier ladder of deliberately-weak textbook RSA "wallets" — from `pencil`
 :::note Deliberately never a recipe, no matter the modulus size
 Both `YoloRSA` tiers are unpadded textbook RSA — `s^e mod n == msgHash mod n`, no OAEP/PKCS#1. That has malleability/forgery issues independent of factoring difficulty, which no modulus size fixes. The [`LightningRSA` recipe](../recipes/lightning-rsa.mdx) is the version of this idea built to actually be sound — real PKCS#1 v1.5 padding, checked against real signatures.
 :::
+
+### [Post-quantum survey](./post-quantum/index.mdx)
+
+Six schemes across lattice, hash-based, and code-based families — plus an isogeny-based write-up with no code, and a real, if unglamorous, reason why. `MlKem` runs FIPS 203 at full real size (no shrinking — the hard problem doesn't survive it); `Lamport` gets a full build and a real forgery demo; `Falcon` and `ML-DSA` stop short of a full build for two different, both real, reasons (floating-point signing hazards; genuinely more machinery than the survey's scope); `Classic McEliece` was a stretch goal that landed in full.
 
 ## Why "grimoire"
 

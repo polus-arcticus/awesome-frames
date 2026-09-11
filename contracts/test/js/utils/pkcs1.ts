@@ -1,7 +1,7 @@
 // Real RSASSA-PKCS1-v1_5 (SHA-256) signing/verification, cross-checked
 // against Node's own `crypto` module — the "independent real library"
 // reference for src/LightningRSA/LightningRSA.sol and
-// src/LightningRSAAccount/LightningRSAAccount.yul, the same discipline
+// src/LightningRSA/LightningRSAAccount.yul, the same discipline
 // test/js/utils/bip340.ts applies against `nostr-tools` and Node's crypto
 // module is a considerably more battle-tested reference than either.
 //

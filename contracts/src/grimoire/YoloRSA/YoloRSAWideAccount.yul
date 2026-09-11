@@ -18,7 +18,7 @@
 /// relocated here once it became clear the thing distinguishing it from
 /// YoloRSA was never "deployability" (both are equally deployable) but
 /// modulus width, and once the `LightningRSA` name was needed for an
-/// actual production-shaped recipe (see src/LightningRSAAccount/) built on
+/// actual production-shaped recipe (see src/LightningRSA/) built on
 /// real PKCS#1 v1.5 padding — a scheme unpadded textbook RSA, at any
 /// modulus size, never graduates to.
 ///

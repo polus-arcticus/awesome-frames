@@ -1,0 +1,28 @@
+---
+title: Post-quantum survey
+---
+
+# Post-quantum: a survey pass
+
+Prompted by a Vitalik Buterin post surveying post-quantum cryptography families — Falcon, ML-DSA, "some other lattice-based thing," something code-based or isogeny-based, "even more esoteric." Three scoping decisions shaped this pass, all deliberate:
+
+1. **Off-chain/JS only.** PQC building blocks (NTT, lattice sampling, isogeny walks, syndrome decoding) mostly have no EVM precompile analog, unlike RSA/EC which map onto `MODEXP`/`ecrecover`. No Solidity, no Yul, no EIP-8141 framing this round.
+2. **A survey, not one deep build.** Six concrete schemes, each scoped to what's actually achievable and honest at survey depth — not six half-finished attempts at full production-grade implementations.
+3. **Concrete picks over vague families** — including discovering [`@noble/post-quantum`](https://github.com/paulmillr/noble-post-quantum) (implements ML-KEM/FIPS 203, ML-DSA/FIPS 204, SLH-DSA/FIPS 205, Falcon) exists and can serve as real ground truth, the same role `@noble/curves` already plays for BIP-340.
+
+## Residents, with an honest status column
+
+| Scheme | Family | Status | Why |
+|---|---|---|---|
+| [**ML-KEM**](./ml-kem.mdx) | lattice (Module-LWE) | **Full build** | No floating point, no rejection-sampling loop — the most tractable lattice scheme here, and a key-exchange/signature contrast with ML-DSA mirroring ToyCurveECDH (DH) vs. `YoloRSA`/BIP-340 (signing) elsewhere in this repo. |
+| [**Lamport**](./lamport.mdx) | hash-based ("esoteric") | **Full build** | Genuinely elementary — no algebraic structure, no external ground truth needed. Includes a real forgery demo. |
+| [**Falcon**](./falcon.mdx) | lattice (NTRU + GPV) | **Verify-only** | Signing needs floating-point Gaussian sampling — a real, documented hazard (part of why FIPS 206 is still Draft). Verification is pure integer arithmetic. |
+| [**ML-DSA**](./ml-dsa.mdx) | lattice (Module-LWE+SIS) | **Conceptual** | Real parameters, no working code — Fiat-Shamir-with-Aborts, bit decomposition, and hint-bit compression are real extra complexity beyond ML-KEM, deserving their own pass rather than a rushed one. |
+| [**Classic McEliece**](./mceliece.mdx) | code-based | **Full build** (a stretch goal that landed) | A real toy binary Goppa code — GF(16) arithmetic, an actual Goppa parity-check construction, real S/P scrambling — decoded via a brute-force syndrome lookup table standing in for Patterson's algorithm. |
+| [**Isogeny (CSIDH design + the SIDH break)**](./isogeny.mdx) | isogeny-based | **Docs-only** | Real isogeny arithmetic (Vélu's formulas, extension-field curves) is a research-grade lift — not a survey-pass item. The design and the 2022 SIDH collapse are worth the write-up regardless. |
+
+*(Multivariate — Rainbow, broken by Beullens in 2022 — was considered and deferred entirely; a good future case study, comparable in weight to McEliece/isogeny.)*
+
+## Why this belongs in the grimoire, not Recipes
+
+Same dividing line as everywhere else in this track: not deployability, but whether the scheme is meant to be *trusted*. `MlKem` is the odd one out here in a good way — real FIPS 203 parameters, full security, nothing shrunk — but it's still a grimoire entry rather than a Recipe because there's no EIP-8141 account attached to it (yet) and no on-chain framing this pass. Everything else is incomplete or shrunk on purpose: ML-DSA and isogeny are deliberately unfinished, Falcon is verify-only because the missing half is genuinely hazardous, Lamport shrinks the *bit count signed* (not the preimages themselves) for legibility, and McEliece's n=15 is nowhere near the 3488+ a real deployment needs. None of that is a defect to fix later within this pass; it's the honest shape of a survey.

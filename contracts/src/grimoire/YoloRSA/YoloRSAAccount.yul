@@ -1,7 +1,7 @@
 /// @title YoloRSAAccount
 /// @notice A minimal EIP-8141 self-verifying account authorized by
 /// deliberately-weak textbook RSA instead of ECDSA/Schnorr — see
-/// src/YoloRSA/YoloRSA.sol for the verification math (padding caveat and
+/// src/grimoire/YoloRSA/YoloRSA.sol for the verification math (padding caveat and
 /// all) and that file's header for why this is toy-only. Its VERIFY frame
 /// references an `ARBITRARY` signature entry (the raw RSA signature
 /// integer `s`, 32 bytes) via `SIGDATACOPY`; on success it APPROVEs both

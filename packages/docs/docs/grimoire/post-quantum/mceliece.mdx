@@ -1,0 +1,31 @@
+---
+title: Classic McEliece
+---
+
+# `McEliece` — a real toy Goppa code
+
+Code-based, not lattice/isogeny-based — a genuinely different hard problem: **syndrome decoding**. Given a parity-check matrix `H` and a syndrome `H·e^T`, find the low-weight error `e`. Believed hard for a *generic* linear code, which is exactly why McEliece's public key is deliberately built to look like one — a real toy binary Goppa code (length `n=15`, dimension `k=7`, correcting `t=2` errors, over `GF(16)`), wrapped in the actual McEliece structure: a scrambled generator matrix `G' = S·G·P` hides the real code's error-correcting structure from anyone without the secret `S`, `P`, and decoder.
+
+This was scoped as a stretch goal — attempt only if the rest of the survey landed cleanly, write the design up in prose otherwise. It landed: full `GF(16)` arithmetic, a real Goppa parity-check construction, a real scrambled-keypair cryptosystem, exhaustively verified (every one of the 2⁷=128 possible messages, fresh keypair each time, round-trips correctly through `encrypt`/`decrypt`).
+
+## The honest caveat, stated the way `YoloRSA` states its own
+
+`n=15` is far too small to make any real security claim. A real Classic McEliece deployment uses `n≈3488-8192`; syndrome-decoding a generic `[15,7]` code is already just brute force (121 weight-≤2 error patterns is nothing to search). This toy doesn't distinguish "broken because the Goppa structure leaked" from "broken because it's tiny" — the point is the mechanism, not a security claim at this size.
+
+## Decoding: a lookup table standing in for Patterson's algorithm
+
+The same "brute force substitutes for the sophisticated algorithm" move `ToyCurveECDH` already makes (enumerating every point instead of implementing a real discrete-log algorithm). All 121 weight-≤2 error patterns are precomputed once, indexed by their syndrome — a real decoder for `n≈3488+` needs Patterson's algorithm specifically because that search space is astronomically larger; at `t=2` it's nothing.
+
+## The Goppa polynomial is found by search, not hand-picked
+
+`g(x) = x² + g1·x + g0` is searched for at module-load time until one with no root anywhere in `GF(16)` turns up — for a degree-2 polynomial, "no root in the base field" is exactly equivalent to irreducibility. Verified computationally, not assumed — the same discipline `ToyCurveECDH`'s own JS mirror applies to its group order (brute-force-enumerated, not assumed).
+
+## Verified exhaustively, not against an external library
+
+Unlike `MlKem`/`Falcon`, there's no real external McEliece library at these toy parameters to cross-check against. The verification discipline here matches `ToyCurveECDH`'s instead: test the actual claim exhaustively. `scripts/gen-mceliece-vectors.ts` round-trips **every one of the 128 possible 7-bit messages**, with a **fresh keypair** (fresh random `S`, `P`) each time, before pinning anything.
+
+## Layout
+
+- `contracts/src/grimoire/post-quantum/ClassicMcEliece/mcEliece.ts` — `GF(16)` arithmetic, Goppa construction, `keygen`/`encrypt`/`decrypt`.
+- `contracts/scripts/gen-mceliece-vectors.ts` → `contracts/test/vectors/mceliece-vectors.json`.
+- `contracts/test/js/McEliece.test.ts` — pinned vectors, a live round trip, the exhaustive 128-message sweep run directly in the test, and a check that over-capacity corruption is correctly rejected rather than silently mis-decoded.

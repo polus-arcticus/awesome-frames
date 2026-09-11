@@ -1,4 +1,4 @@
-// Generates known-answer sign/verify vectors for src/YoloRSA/YoloRSA.sol
+// Generates known-answer sign/verify vectors for src/grimoire/YoloRSA/YoloRSA.sol
 // and src/grimoire/YoloRSA/YoloRSAAccount.yul, across the yolo-wallet
 // difficulty ladder. Written to test/vectors/yolo-rsa-vectors.json, read
 // back by test/js/YoloRSA.test.ts. Same "derive and verify before trusting

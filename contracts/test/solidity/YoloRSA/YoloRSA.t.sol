@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
-import {YoloRSA} from "src/YoloRSA/YoloRSA.sol";
+import {YoloRSA} from "src/grimoire/YoloRSA/YoloRSA.sol";
 
 /// @notice Known-answer + negative tests for YoloRSA.verify, across the
 /// whole yolo-wallet difficulty ladder (see test/js/utils/yoloRSA.ts's

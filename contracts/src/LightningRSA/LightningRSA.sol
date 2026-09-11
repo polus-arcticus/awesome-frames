@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 /// @title LightningRSA — RSASSA-PKCS1-v1_5 (SHA-256) signature verification
-/// @notice Unlike src/YoloRSA/YoloRSA.sol (deliberately-tiny, deliberately
+/// @notice Unlike src/grimoire/YoloRSA/YoloRSA.sol (deliberately-tiny, deliberately
 /// unpadded — see that file's header), this is meant to be sound at any
 /// modulus size an operator actually deploys with: real EMSA-PKCS1-v1_5
 /// padding (RFC 8017 §9.2), arbitrary modulus width via Solidity's native

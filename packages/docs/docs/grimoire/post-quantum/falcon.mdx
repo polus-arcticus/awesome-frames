@@ -1,0 +1,27 @@
+---
+title: Falcon
+---
+
+# `Falcon` — verify-only
+
+Falcon-512, but only the verification half. Where `MlKem` got a full build and `Lamport` got a full build, Falcon stops at verification, for a real, specific reason: signing needs floating-point Gaussian sampling over the NTRU lattice (the "Falcon tree" FFT sampler) — a well-documented, genuinely hard-to-get-right-and-constant-time hazard, and part of why NIST's own FIPS 206 status updates cite it as the main reason Falcon's standardization took longer than ML-KEM's or ML-DSA's. FIPS 206 is still a **Draft** as of this writing (NIST's Initial Public Draft, August 2025; final expected late 2026/2027) — not a stable target to derive against yet.
+
+Verification, by contrast, is pure integer/ring arithmetic — no floating point anywhere. It only needs to recompute `s1 = c - s2·h mod q` and check a norm bound. So this derives from the *original*, long-stable Falcon submission spec ([falcon-sign.info/falcon.pdf](https://falcon-sign.info/falcon.pdf), v1.2, 2020-10-01 — what the NIST round-3 submission, and FIPS 206 itself, are built on) rather than the still-moving draft, and only implements the half that spec pins down with the same precision `MlKem`'s derivation needed: `HashToPoint` (Algorithm 3), signature `Decompress` (Algorithm 18), and `Verify` (Algorithm 16).
+
+## The verification equation
+
+`s1 + s2·h ≈ c (mod q)`. Recalling `h = g·f⁻¹ mod q` from key generation, this is really `s1·f + s2·g ≈ c·f`, all divided by `f` — meaning a valid signature is, underneath, a *short* vector `(s1, s2)` close to a specific target point in the NTRU lattice spanned by `(f,g)`/`(F,G)`. Verification never touches that lattice structure directly — it recomputes `s1` from the public `h` and checks the pair is short (`‖(s1,s2)‖² ≤ β²`). Producing a genuine short `(s1,s2)` pair without knowing the trapdoor `(f,g,F,G)` is exactly the hard lattice problem Falcon's security rests on.
+
+## Why no NTT
+
+Falcon's `q=12289` satisfies `q ≡ 1 mod 1024 = 2n` — unlike `MlKem`'s ring, `x^512+1` splits into 512 *linear* factors here, and a full NTT is available. This implementation doesn't bother with one anyway: verification runs once per signature, not in a hot loop, so plain O(n²) schoolbook negacyclic convolution is simpler to get right at no real cost.
+
+## Verified against real signatures — including a wire-format surprise
+
+Cross-checked against `@noble/post-quantum`'s Falcon implementation, but not the default export: `falcon512.sign()` returns *unpadded*, variable-length signatures (the spec's own "on average shorter" option); this file's `verify` assumes the fixed 666-byte padded format Algorithm 16 literally describes. Using `falcon512padded` instead — noble's fixed-length variant — resolved the mismatch immediately. A small, concrete reminder that a spec permitting multiple valid encodings means "cross-checked against a real library" still requires checking *which* encoding that library actually produced.
+
+## Layout
+
+- `contracts/src/grimoire/post-quantum/Falcon/falcon.ts` — `verify()` only; keygen/sign delegated entirely to `@noble/post-quantum`.
+- `contracts/scripts/gen-falcon-vectors.ts` → `contracts/test/vectors/falcon-vectors.json`.
+- `contracts/test/js/Falcon.test.ts` — pinned vectors plus live verification against fresh `@noble/post-quantum` signatures.

@@ -1,0 +1,42 @@
+---
+title: StarkPedersen
+---
+
+# `StarkPedersen`
+
+Starknet's actual Pedersen hash function — the one [StarkWare's own spec](https://docs.starkware.co/starkex/pedersen-hash-function.html) defines, the one [`@scure/starknet`](https://www.npmjs.com/package/@scure/starknet) implements, the one a local Cairo project (ScarabSign) names as the reason its peer-to-peer bid-signature aggregation works at all — implemented directly in Yul, callable from any Ethereum contract. Unlike [`ToyCurveECDH`](./toy-curve-ecdh.mdx), every number in this file is a **real** Starknet constant, not shrunk for legibility: the curve, the field, and the five "nothing up my sleeve" generator points are exactly what a Starknet node uses.
+
+This is the first grimoire step toward verifying Starknet-flavored signatures on Ethereum, not that verification itself — STARK-curve ECDSA on top of this hash is a separate, larger lift, out of scope here.
+
+## The curve and the algorithm
+
+Short Weierstrass, same shape as `ToyCurveECDH`, much bigger numbers: `y² = x³ + x + b (mod p)`, where `p = 2^251 + 17·2^192 + 1` and `a = 1`. `b` (StarkWare's own literal digits of π) never appears in the addition/doubling slope formulas — same as `ToyCurveECDH`'s unused `B` — so it isn't needed on-chain at all; it only shows up in this repo as an independent on-curve check when generating vectors.
+
+Pedersen has no notion of a group order or a base point `G`. Unlike `ToyCurveECDH`'s Diffie-Hellman — which repeatedly doubles and adds *one* point along a scalar's bits — Pedersen folds each of its two field-element inputs against its *own* pair of fixed, independent generator points, chosen so nobody (StarkWare included) knows a discrete-log relation between them:
+
+```
+pedersen(x, y) = shift_point + (x_low·P0 + x_high·P1) + (y_low·P2 + y_high·P3)
+```
+
+where "low" is the low 248 bits and "high" is the high 4 bits of a (at most 252-bit) field element, and each `value·point` term is a bit-conditional subset sum over repeated doublings of that point.
+
+## Layout
+
+- `contracts/src/grimoire/StarkPedersen/StarkPedersen.yul` — the contract. Function names continue `ToyCurveECDH`'s ASCII-pinyin glossary: `jia_add` 加 "to add" (a guarded addition — reverts on a shared x-coordinate, since Pedersen's construction means that should never happen), `xian_chord` 弦 "the chord", `qie_tangent` 切 "the tangent" (the same geometry as `ToyCurveECDH`'s), `die_walk` 叠 "to stack, to fold" (the fused bit-walk-and-accumulate loop), and `rong_fuse` 融 "to fuse, to blend" (the `pedersen(x, y)` entry point).
+- `contracts/test/js/utils/starkPedersen.ts` — the independent JS/bigint mirror, cross-checked byte-for-byte against `@scure/starknet`'s own `pedersen()` before being trusted for anything.
+- `contracts/scripts/gen-stark-pedersen-vectors.ts` → `contracts/test/vectors/stark-pedersen-vectors.json` — known-answer vectors, verified two independent ways at generation time: every `pedersen(x, y)` vector against `@scure/starknet`, and every point-arithmetic vector against the curve equation itself (`isOnCurve`, using StarkWare's published `b` — a check the hot-path formulas never touch).
+- `contracts/test/js/StarkPedersen.test.ts` — deploys the compiled Yul to Hardhat's local network and checks it against the pinned vectors, directly against `@scure/starknet` for fresh values outside the pinned set, against both correctness guards (out-of-range inputs, the same-x-coordinate collision guard), and measures the real gas cost.
+
+## Why a Yul contract needs its own fold, not StarkWare's precomputed table
+
+`@scure/starknet` precomputes a 252-entry table of doublings once, then walks it per call. A Yul contract has no persistent state to precompute into ahead of a call — `die_walk` fuses "double the basis point" and "conditionally add it" into a single loop, computed fresh every time. That's also the direct cause of the gas cost below.
+
+## Gas: measured, not guessed
+
+A single `pedersen(x, y)` call needs an EC add-or-double — and therefore one `MODEXP` call for the field inverse — roughly once per bit across ~504 bit-positions (248+4, twice). That sounds like it should be enormous. Measured on Hardhat's local network, it costs **~2.7M gas** — real, non-trivial cost for a single primitive hash of two field elements, but comfortably inside an ordinary block, not the "impractical on a real network" number the raw MODEXP-call count might suggest.
+
+On Starknet itself, Pedersen is a native builtin the STARK VM was designed around, at negligible cost. Reproducing it as ordinary EVM arithmetic makes that asymmetry legible instead of theoretical — and it's a concrete data point in the long-running "should Ethereum have a Pedersen/Poseidon precompile" debate. [EIP-5988](https://eips.ethereum.org/EIPS/eip-5988) proposed exactly a Poseidon precompile in 2022; it's stagnant, and Poseidon itself is currently under active cryptanalysis review by the Ethereum Foundation, with no precompile of either hash function enshrined as of this writing.
+
+## Scope
+
+Binary `pedersen(x, y)` only — not `computeHashOnElements`'s n-ary fold, not STARK-curve ECDSA/signature verification, not any particular aggregation scheme built on top of it. Those stay out of scope for this pass, same shallow-first discipline as the [post-quantum survey](./post-quantum/index.mdx).

@@ -26,9 +26,17 @@ As of 2026-08-27, EIP-8141 was upgraded to Scheduled-for-Inclusion for the "Hego
 │   │   ├── BIP340/                  # BIP-340 (Nostr) Schnorr verification library
 │   │   ├── NostrFrameAccount/       # recipe #1: a VERIFY-frame account authorized by
 │   │   │                             #   a Nostr/BIP-340 Schnorr sig instead of ECDSA
-│   │   ├── YoloRSA/                 # deliberately-tiny textbook RSA verify library
+│   │   ├── LightningRSA/            # recipe #2: verify library + account together (unlike
+│   │   │                             #   BIP340/NostrFrameAccount's split — LightningRSA.sol
+│   │   │                             #   has no reuse outside its own account)
 │   │   └── grimoire/                # NOT Frame-tx recipes — a pedagogical-crypto corner,
-│   │                                 #   minimal asymmetric primitives written in raw Yul
+│   │                                 #   minimal asymmetric primitives, mostly in raw Yul
+│   │       ├── ToyCurveECDH/        #   toy-curve ECDH, small enough to verify by hand
+│   │       ├── StarkPedersen/       #   Starknet's real Pedersen hash, on-chain in Yul
+│   │       ├── YoloRSA/             #   verify library + deployable crackme wallets, a
+│   │       │                         #   difficulty ladder including wide (2-word) tiers
+│   │       └── post-quantum/        #   JS-only PQC survey: MlKem, Lamport, Falcon,
+│   │                                 #   MlDsa, ClassicMcEliece (no on-chain accounts yet)
 │   ├── scripts/                     # vector generation + the live end-to-end demos
 │   ├── test/                        # solidity (forge-std) + TS (node:test/earl) tests
 │   ├── rocketh/                     # rocketh config (accounts, extensions)

@@ -1,0 +1,33 @@
+---
+title: ML-DSA
+---
+
+# `MlDsa` — conceptual, not implemented
+
+Real parameters, no working `sign()` or `verify()`. This page — and the file it documents — exist to record *why* on purpose, rather than ship a half-working implementation. "No half-finished implementations" is a rule this whole codebase follows; this is what following it looks like when a scheme turns out to be bigger than its survey slot.
+
+## Why ML-DSA stopped here, next to `MlKem` going all the way
+
+Both are Module-Lattice schemes over the same ring dimension (`n=256`), and both were candidates for this survey's one full-build lattice slot. `MlKem` won it specifically because it needed nothing beyond a matrix of noisy linear equations (Module-LWE) and a straightforward NTT. ML-DSA needs everything `MlKem` needs, plus a second layer `MlKem` never touches:
+
+- **Fiat-Shamir with Aborts** (Lyubashevsky's technique) — unlike `MlKem`'s encryption, which just tolerates its own noise, ML-DSA's signing loop must *reject and retry* whenever a candidate signature's coefficients get too large or leak information about the secret key. A real, bounded-but-genuine retry loop, not a single deterministic pass.
+- **High/low bit decomposition** (`Decompose`, `HighBits`, `LowBits`) — splitting each coefficient of the noisy product into a coarse "high" part (what gets signed) and a "low" part that's also a rejection-sampling gate in the same step. `MlKem`'s `Compress`/`Decompress` are lossy rounding for bandwidth; ML-DSA's decomposition is that *and* a validity check.
+- **Hint bits** — a compact, side-channel-safe way to tell the verifier which coefficients need help reconstructing the correct high bits after the low bits were discarded. `MlKem`'s ciphertext has no analog of this structure at all.
+
+None of that is individually exotic — each has a clean FIPS 204 spec — but stacking three extra, genuinely stateful/branchy mechanisms on an already-real NTT ring is a meaningfully bigger lift than `MlKem`'s, and deserves the same primary-source-derivation rigor (byte-for-byte against `@noble/post-quantum`'s `ml_dsa44`, the way `MlKem` and `Falcon` both got) rather than a rushed partial attempt this pass.
+
+## Real parameters, confirmed not guessed
+
+```ts
+{n: 256, q: 8_380_417, k: 4, l: 4, d: 13, gamma1: 131_072, gamma2: 95_232, tau: 39, eta: 2, omega: 80}
+```
+
+Confirmed against `@noble/post-quantum`'s own `PARAMS` and `ml_dsa44.lengths` (publicKey: 1312 bytes, secretKey: 2560 bytes, signature: 2420 bytes) — not from memory.
+
+## What a future full pass would need
+
+Derive `KeyGen`/`Sign`/`Verify` from the FIPS 204 PDF directly — the same primary-source discipline `MlKem`'s derivation needed, given how easy the `Decompose`/`MakeHint`/`UseHint` boundary conditions are to get subtly wrong — then cross-check byte-for-byte against `ml_dsa44` the way `MlKem`'s generator does. One open question worth resolving early: because Sign's rejection behavior is genuinely random-length, byte-exact matching may not be achievable for `Sign` without also reimplementing `@noble/post-quantum`'s exact rejection-retry RNG consumption — landing on Verify-only, the scope Falcon settled into for a different reason (floating point), might turn out to be the honest answer here too.
+
+## Layout
+
+- `contracts/src/grimoire/post-quantum/MlDsa/mlDsa.ts` — real parameters and sizes, exported as constants, with the gap documented in the header.
