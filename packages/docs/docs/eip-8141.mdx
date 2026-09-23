@@ -20,7 +20,7 @@ The `signatures` list supports three schemes:
 | `P256` | Protocol-verified, the new `P256VERIFY` opcode | 128 bytes: `r \|\| s \|\| qx \|\| qy` |
 | `ARBITRARY` | **No protocol-level check at all** — verification is entirely up to your `VERIFY` frame's code | raw bytes, whatever your scheme needs |
 
-`ARBITRARY` is what makes this a genuine account-abstraction primitive: any signature scheme you can implement in EVM opcodes, you can authorize a Frame tx with. Every recipe and grimoire entry in this repo that isn't plain ECDSA — [`NostrFrameAccount`](./recipes/nostr-frame-account.mdx)'s BIP-340 Schnorr, [YoloRSA](./grimoire/yolo-rsa.mdx)'s textbook-RSA accounts, the [`LightningRSA` recipe](./recipes/lightning-rsa.mdx)'s real padded RSA — uses `ARBITRARY`.
+`ARBITRARY` is what makes this a genuine account-abstraction primitive: any signature scheme you can implement in EVM opcodes, you can authorize a Frame tx with. Every tool and toy in this repo that isn't plain ECDSA — [`NostrFrameAccount`](./tools/nostr-frame-account.mdx)'s BIP-340 Schnorr, [YoloRSA](./toys/yolo-rsa.mdx)'s textbook-RSA accounts, [`LightningRSA`](./tools/lightning-rsa.mdx)'s real padded RSA — uses `ARBITRARY`.
 
 A `FrameSignature` is `[scheme, signer, msg, signature]`:
 
@@ -32,7 +32,7 @@ A `FrameSignature` is `[scheme, signer, msg, signature]`:
 
 The public mempool's **validation trace rules** constrain what a `VERIFY` frame may do: it may not `CALL*`/`EXTCODE*` anything except `tx.sender`, a default-code account, or a **precompile**. A `VERIFY` frame that needs custom crypto has to inline it using only precompiles (`ecrecover` `0x01`, `SHA256` `0x02`, `MODEXP` `0x05`, ...) — it can't delegate to a separately deployed library contract and still be publicly propagatable.
 
-This is why every self-verifying account in this repo is written as **pure Yul**, not Solidity: `solc` cannot emit EIP-8141's new opcodes (`APPROVE` `0xAA`, `TXPARAM` `0xB0`, `SIGDATACOPY` `0xB5`, ...) from a normal contract's inline assembly — only Yul's `verbatim` builtin can. The usual pattern (see [`NostrFrameAccount`](./recipes/nostr-frame-account.mdx) for a worked example) is: derive and unit-test the verification math in isolation as a pure Solidity library first — fast iteration, easy known-answer vectors, real EVM context via Hardhat — then re-inline that exact math in the Yul account using only precompiles.
+This is why every self-verifying account in this repo is written as **pure Yul**, not Solidity: `solc` cannot emit EIP-8141's new opcodes (`APPROVE` `0xAA`, `TXPARAM` `0xB0`, `SIGDATACOPY` `0xB5`, ...) from a normal contract's inline assembly — only Yul's `verbatim` builtin can. The usual pattern (see [`NostrFrameAccount`](./tools/nostr-frame-account.mdx) for a worked example) is: derive and unit-test the verification math in isolation as a pure Solidity library first — fast iteration, easy known-answer vectors, real EVM context via Hardhat — then re-inline that exact math in the Yul account using only precompiles.
 
 ## The testnet
 

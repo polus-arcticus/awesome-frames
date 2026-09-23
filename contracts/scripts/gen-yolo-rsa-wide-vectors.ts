@@ -1,5 +1,5 @@
 // Generates known-answer vectors for
-// src/grimoire/YoloRSA/YoloRSAWideAccount.yul — the 2-word (up to 512-bit)
+// src/toys/YoloRSA/YoloRSAWideAccount.yul — the 2-word (up to 512-bit)
 // sibling of YoloRSAAccount.yul. Reuses YoloRSA's own keygen/sign/verify
 // (test/js/utils/yoloRSA.ts) unchanged, since the RSA math itself doesn't
 // care how many EVM words the modulus spans — only test/js/utils/bigWord.ts

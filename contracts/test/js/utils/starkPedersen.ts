@@ -1,5 +1,5 @@
 // Pure-JS/bigint mirror of the point arithmetic and Pedersen-hash fold
-// implemented in src/grimoire/StarkPedersen/StarkPedersen.yul — see that
+// implemented in src/toys/StarkPedersen/StarkPedersen.yul — see that
 // file's header for the full glossary. Used both to generate known-answer
 // vectors (../../../scripts/gen-stark-pedersen-vectors.ts) and as an
 // independent cross-check in ../StarkPedersen.test.ts, which additionally

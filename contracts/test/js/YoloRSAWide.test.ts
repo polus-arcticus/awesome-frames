@@ -4,7 +4,7 @@
 // scripts/gen-yolo-rsa-wide-vectors.ts), and with a fresh live sign/verify
 // round trip at a size distinct from every pinned tier. Same reasoning as
 // YoloRSA.test.ts for why there's no EVM/Hardhat deployment here: the
-// deployable account (src/grimoire/YoloRSA/YoloRSAWideAccount.yul)
+// deployable account (src/toys/YoloRSA/YoloRSAWideAccount.yul)
 // needs EIP-8141 opcodes only the live ethrex testnet has.
 import {expect} from 'earl';
 import {describe, it} from 'node:test';
@@ -30,7 +30,7 @@ const vectorsJson: {tiers: TierVectors[]} = JSON.parse(
 	),
 );
 
-describe('YoloRSAWide (grimoire) — bigWord split/join round-trips', function () {
+describe('YoloRSAWide (toys) — bigWord split/join round-trips', function () {
 	it('splits and rejoins a 2-word value losslessly', function () {
 		const value = (1n << 400n) + 12345n;
 		const words = splitWords(value, 2);
@@ -49,7 +49,7 @@ describe('YoloRSAWide (grimoire) — bigWord split/join round-trips', function (
 	});
 });
 
-describe('YoloRSAWide (grimoire) — pinned known-answer vectors', function () {
+describe('YoloRSAWide (toys) — pinned known-answer vectors', function () {
 	for (const tier of vectorsJson.tiers) {
 		describe(`tier: ${tier.name} (${tier.bits}-bit n)`, function () {
 			const n = joinWords([BigInt(tier.nHigh), BigInt(tier.nLow)]);

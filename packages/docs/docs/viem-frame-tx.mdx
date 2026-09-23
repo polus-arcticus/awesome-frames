@@ -43,7 +43,7 @@ const unsigned = {
 
 const sigHash = computeSigHash(unsigned);
 // sign sigHash with whatever scheme you're using — see the parent repo's
-// contracts/src/BIP340 for an ARBITRARY-scheme example — then attach it:
+// contracts/src/tools/BIP340 for an ARBITRARY-scheme example — then attach it:
 const signed = {...unsigned, signatures: [{scheme: SignatureScheme.ARBITRARY, signer: null, msg: '0x', signature}]};
 
 const raw = serializeFrameTransaction(signed);
@@ -76,4 +76,4 @@ Because this targets a Draft EIP on a fork of a fork, three different wire forma
 
 ## No built-in signing helpers
 
-`examples/self-transfer.ts` signs with `@noble/curves` directly (viem's own low-level `sign` isn't exported publicly). The parent repo's [BIP-340 signer](./recipes/nostr-frame-account.mdx) covers `ARBITRARY`, but there's no `viem-frame-tx`-level convenience for either `SECP256K1` or `P256` signing yet.
+`examples/self-transfer.ts` signs with `@noble/curves` directly (viem's own low-level `sign` isn't exported publicly). The parent repo's [BIP-340 signer](./tools/nostr-frame-account.mdx) covers `ARBITRARY`, but there's no `viem-frame-tx`-level convenience for either `SECP256K1` or `P256` signing yet.

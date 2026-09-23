@@ -90,7 +90,7 @@ const unsigned: FrameTransactionSerializable = {
 
 const sigHash = computeSigHash(unsigned);
 // sign sigHash with whatever scheme you declared above — e.g. BIP-340/Nostr
-// for ARBITRARY (see the parent repo's contracts/src/BIP340) — then attach
+// for ARBITRARY (see the parent repo's contracts/src/tools/BIP340) — then attach
 // the resulting bytes:
 const signed: FrameTransactionSerializable = {
 	...unsigned,

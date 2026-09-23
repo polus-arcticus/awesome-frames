@@ -1,5 +1,5 @@
-// Generates known-answer sign/verify vectors for src/grimoire/YoloRSA/YoloRSA.sol
-// and src/grimoire/YoloRSA/YoloRSAAccount.yul, across the yolo-wallet
+// Generates known-answer sign/verify vectors for src/toys/YoloRSA/YoloRSA.sol
+// and src/toys/YoloRSA/YoloRSAAccount.yul, across the yolo-wallet
 // difficulty ladder. Written to test/vectors/yolo-rsa-vectors.json, read
 // back by test/js/YoloRSA.test.ts. Same "derive and verify before trusting
 // the Solidity/Yul" discipline as gen-toy-curve-vectors.ts.

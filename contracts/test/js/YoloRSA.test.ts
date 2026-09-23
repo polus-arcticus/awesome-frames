@@ -6,7 +6,7 @@
 // implementations agree), and with a fresh, live sign -> verify -> crack ->
 // forge round trip — the actual "this is really breakable" proof, not just
 // pinned vectors. No EVM/Hardhat network involved: the deployable account
-// (src/grimoire/YoloRSA/YoloRSAAccount.yul) needs EIP-8141 opcodes that
+// (src/toys/YoloRSA/YoloRSAAccount.yul) needs EIP-8141 opcodes that
 // only exist on the live ethrex testnet, so — same reasoning
 // NostrFrameAccount.yul's lack of a .test.ts follows — it isn't
 // Hardhat-testable locally; only the pure verification math is covered
@@ -39,7 +39,7 @@ const vectorsJson: {tiers: TierVectors[]} = JSON.parse(
 	),
 );
 
-describe('YoloRSA (grimoire) — pinned known-answer vectors', function () {
+describe('YoloRSA (toys) — pinned known-answer vectors', function () {
 	for (const tier of vectorsJson.tiers) {
 		describe(`tier: ${tier.name} (${tier.bits}-bit n)`, function () {
 			const n = BigInt(tier.n);

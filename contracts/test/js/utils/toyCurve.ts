@@ -1,5 +1,5 @@
 // Pure-JS/bigint mirror of the point arithmetic implemented in
-// src/grimoire/ToyCurveECDH/ToyCurveECDH.yul — see that file's header for
+// src/toys/ToyCurveECDH/ToyCurveECDH.yul — see that file's header for
 // the full glossary and the curve's derivation. Used both to generate
 // known-answer vectors (../../../scripts/gen-toy-curve-vectors.ts) and as
 // an independent cross-check in ../ToyCurveECDH.test.ts.

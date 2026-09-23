@@ -1,7 +1,7 @@
 // Real RSASSA-PKCS1-v1_5 (SHA-256) signing/verification, cross-checked
 // against Node's own `crypto` module — the "independent real library"
-// reference for src/LightningRSA/LightningRSA.sol and
-// src/LightningRSA/LightningRSAAccount.yul, the same discipline
+// reference for src/tools/LightningRSA/LightningRSA.sol and
+// src/tools/LightningRSA/LightningRSAAccount.yul, the same discipline
 // test/js/utils/bip340.ts applies against `nostr-tools` and Node's crypto
 // module is a considerably more battle-tested reference than either.
 //
@@ -78,7 +78,7 @@ function bigIntToBytes(value: bigint, length: number): Buffer {
 
 /// EMSA-PKCS1-v1_5-ENCODE (RFC 8017 §9.2): EM = 0x00 || 0x01 || PS || 0x00 || T,
 /// T = SHA256_DIGEST_INFO_PREFIX || hash. This is the exact byte layout
-/// src/LightningRSA/LightningRSA.sol's `_buildEM` reconstructs on-chain.
+/// src/tools/LightningRSA/LightningRSA.sol's `_buildEM` reconstructs on-chain.
 export function buildExpectedEM(hash: Buffer, emLen: number): Buffer {
 	const tLen = SHA256_DIGEST_INFO_PREFIX.length + hash.length;
 	if (emLen < tLen + 11) throw new Error(`buildExpectedEM: modulus too small (emLen=${emLen}, need >= ${tLen + 11})`);

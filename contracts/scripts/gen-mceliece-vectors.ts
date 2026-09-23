@@ -1,5 +1,5 @@
 // Generates known-answer vectors for
-// src/grimoire/post-quantum/ClassicMcEliece/mcEliece.ts. Unlike MlKem/
+// src/toys/post-quantum/ClassicMcEliece/mcEliece.ts. Unlike MlKem/
 // Falcon, there's no real external McEliece library at these toy
 // parameters (n=15) to cross-check against — so the verification
 // discipline here matches ToyCurveECDH's instead: exhaustively test the
@@ -14,7 +14,7 @@
 // Run: pnpm tsx scripts/gen-mceliece-vectors.ts
 
 import {writeFileSync} from 'node:fs';
-import {keygen, encrypt, decrypt, PARAMS} from '../src/grimoire/post-quantum/ClassicMcEliece/mcEliece.js';
+import {keygen, encrypt, decrypt, PARAMS} from '../src/toys/post-quantum/ClassicMcEliece/mcEliece.js';
 
 function fail(msg: string): never {
 	console.error(msg);

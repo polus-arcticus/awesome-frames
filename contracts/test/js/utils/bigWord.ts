@@ -1,7 +1,7 @@
 // Generic big-endian 32-byte-word splitting/joining for RSA moduli wider
 // than a single EVM word (256 bits) — used by test/js/utils/lightningRSA.ts
 // and its vector generator to encode/decode values the same way
-// src/grimoire/LightningRSA/LightningRSAAccount.yul lays them out in
+// src/tools/LightningRSA/LightningRSAAccount.yul lays them out in
 // storage/calldata: most-significant word first, each word right-aligned
 // (standard unsigned big-endian multi-word convention).
 

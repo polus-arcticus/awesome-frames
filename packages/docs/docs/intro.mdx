@@ -4,7 +4,9 @@ title: Introduction
 
 # awesome-frames
 
-A playground for crafting [EIP-8141](https://eips.ethereum.org/EIPS/eip-8141) **Frame transactions** on Ethereum — Hardhat v3 + [rocketh](https://github.com/wighawag/rocketh) for contracts, plus a standalone [`viem`](https://viem.sh)-based encoder package, wired up against the only public Frame-tx-capable testnet that exists today.
+A developer playground for crafting [EIP-8141](https://eips.ethereum.org/EIPS/eip-8141) **Frame transactions** on Ethereum and running them against the only public Frame-tx-capable testnet that exists today — Hardhat v3 + [rocketh](https://github.com/wighawag/rocketh) for contracts, plus a standalone [`viem`](https://viem.sh)-based encoder package.
+
+It's also a supermarket of deliberately weak cryptography. `contracts/src/tools/` holds working, deployable accounts; `contracts/src/toys/` holds real, working, but intentionally broken primitives, each honest about exactly how and when it breaks. Most cryptographic choices, once deployed, get treated as permanent — nobody wants to be the one who shipped the scheme that later turned out to be forgeable. That permanence cuts two ways: people who don't understand cryptography avoid touching it, and people who do understand it often over-commit to one choice anyway, mistaking today's confidence for a guarantee. Frame transactions make it cheap, for the first time on Ethereum, to deploy cryptography that's weak *on purpose* and stake correspondingly little on it — games and experiments built this way carry a fraction of the consequence "real" security would, which makes them an honest way to find out what cryptography people actually want, rather than what gets assumed for them in advance.
 
 :::danger Status: Draft EIP, moving target
 As of 2026-08-27, EIP-8141 was upgraded to Scheduled-for-Inclusion for the "Hegotá" fork (target activation late 2026/2027) but is still Draft — field layouts, gas constants, and opcode numbers can and will change before (if) it activates. No mainnet-track execution client has shipped support yet ([go-ethereum#33954](https://github.com/ethereum/go-ethereum/pull/33954), the one known attempt, was closed in favor of a from-scratch implementation). [`lambdaclass/ethrex`](https://github.com/lambdaclass/ethrex)'s own fork runs a public testnet — see [the EIP-8141 primer](./eip-8141.mdx) — but even that diverges from both the published EIP text and ethrex's own `main` branch. **Treat everything here as research/prototype tooling, not production-ready.**
@@ -12,10 +14,10 @@ As of 2026-08-27, EIP-8141 was upgraded to Scheduled-for-Inclusion for the "Hego
 
 ## What's in this repo
 
-- **[EIP-8141 primer](./eip-8141.mdx)** — what a Frame transaction actually is: `VERIFY`/`SENDER`/`DEFAULT` frame modes, the three signature schemes, and the public-mempool validation trace rules that shape every recipe below.
+- **[EIP-8141 primer](./eip-8141.mdx)** — what a Frame transaction actually is: `VERIFY`/`SENDER`/`DEFAULT` frame modes, the three signature schemes, and the public-mempool validation trace rules that shape every tool below.
 - **[`viem-frame-tx`](./viem-frame-tx.mdx)** — the RLP encoder package: `serializeFrameTransaction` and `computeSigHash`, no signing pipeline of its own by design.
-- **[Recipes](./recipes/index.mdx)** — complete, working `VERIFY`-frame accounts. First one: [`NostrFrameAccount`](./recipes/nostr-frame-account.mdx), authorized by a BIP-340/Nostr Schnorr signature instead of ECDSA.
-- **[The grimoire](./grimoire/index.mdx)** — a separate, deliberately-insecure track: classic asymmetric cryptography written directly in raw Yul, small enough to verify by hand, including wallets sized to be crackable in a chosen window of time on purpose.
+- **[Tools](./tools/index.mdx)** — complete, working `VERIFY`-frame accounts, meant to be deployed and used. First one: [`NostrFrameAccount`](./tools/nostr-frame-account.mdx), authorized by a BIP-340/Nostr Schnorr signature instead of ECDSA.
+- **[Toys](./toys/index.mdx)** — illustrative, not meant to be deployed: classic and modern asymmetric primitives written directly in raw Yul (and, for the post-quantum survey, plain TypeScript), small enough to verify by hand, including wallets sized to be crackable in a chosen window of time on purpose.
 
 ## Repo structure
 
@@ -23,14 +25,14 @@ As of 2026-08-27, EIP-8141 was upgraded to Scheduled-for-Inclusion for the "Hego
 .
 ├── contracts/                       # Hardhat v3 + rocketh contracts package
 │   ├── src/
-│   │   ├── BIP340/                  # BIP-340 (Nostr) Schnorr verification library
-│   │   ├── NostrFrameAccount/       # recipe #1: a VERIFY-frame account authorized by
-│   │   │                             #   a Nostr/BIP-340 Schnorr sig instead of ECDSA
-│   │   ├── LightningRSA/            # recipe #2: verify library + account together (unlike
-│   │   │                             #   BIP340/NostrFrameAccount's split — LightningRSA.sol
-│   │   │                             #   has no reuse outside its own account)
-│   │   └── grimoire/                # NOT Frame-tx recipes — a pedagogical-crypto corner,
-│   │                                 #   minimal asymmetric primitives, mostly in raw Yul
+│   │   ├── tools/                   # meant to be deployed and used
+│   │   │   ├── BIP340/              #   BIP-340 (Nostr) Schnorr verification library
+│   │   │   ├── NostrFrameAccount/   #   a VERIFY-frame account authorized by a
+│   │   │   │                         #     Nostr/BIP-340 Schnorr sig instead of ECDSA
+│   │   │   └── LightningRSA/        #   verify library + account together (unlike
+│   │   │                             #     BIP340/NostrFrameAccount's split — LightningRSA.sol
+│   │   │                             #     has no reuse outside its own account)
+│   │   └── toys/                    # illustrative, not meant to be deployed
 │   │       ├── ToyCurveECDH/        #   toy-curve ECDH, small enough to verify by hand
 │   │       ├── StarkPedersen/       #   Starknet's real Pedersen hash, on-chain in Yul
 │   │       ├── YoloRSA/             #   verify library + deployable crackme wallets, a

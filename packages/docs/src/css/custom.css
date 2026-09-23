@@ -4,8 +4,8 @@
  * work well for content-centric websites.
  */
 
-/* A violet/indigo accent — distinct from Ethereum's own purple, fits the
-   "cryptography as poetry" grimoire framing without implying affiliation. */
+/* A violet/indigo accent — distinct from Ethereum's own purple, without
+   implying affiliation. */
 :root {
   --ifm-color-primary: #5b4fd6;
   --ifm-color-primary-dark: #4638ce;

@@ -1,4 +1,4 @@
-// Deploys src/grimoire/ToyCurveECDH/ToyCurveECDH.yul to Hardhat's local
+// Deploys src/toys/ToyCurveECDH/ToyCurveECDH.yul to Hardhat's local
 // simulated network (no live-network dependency — this contract needs
 // none of EIP-8141's opcodes) and checks it two ways: against the
 // known-answer vectors in test/vectors/toy-curve-vectors.json (generated
@@ -119,7 +119,7 @@ function compileYul(sourcePath: string): Hex {
 
 const {viem} = await network.create();
 
-describe('ToyCurveECDH (grimoire)', function () {
+describe('ToyCurveECDH (toys)', function () {
 	let contract: Awaited<ReturnType<typeof deploy>>;
 
 	async function deploy() {
@@ -127,7 +127,7 @@ describe('ToyCurveECDH (grimoire)', function () {
 		const publicClient = await viem.getPublicClient();
 		const yulPath = fileURLToPath(
 			new URL(
-				'../../src/grimoire/ToyCurveECDH/ToyCurveECDH.yul',
+				'../../src/toys/ToyCurveECDH/ToyCurveECDH.yul',
 				import.meta.url,
 			),
 		);

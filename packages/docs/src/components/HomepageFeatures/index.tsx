@@ -71,8 +71,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Real recipes, not just theory',
-    to: '/docs/recipes',
+    title: 'Real tools, not just theory',
+    to: '/docs/tools',
     Icon: KeyIcon,
     description: (
       <>
@@ -84,15 +84,15 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'The grimoire',
-    to: '/docs/grimoire',
+    title: 'Toys',
+    to: '/docs/toys',
     Icon: BookIcon,
     description: (
       <>
-        A separate, deliberately-insecure track: classic asymmetric
-        cryptography implemented directly in raw Yul, small and toy enough
-        to verify by hand — including wallets sized to be crackable on
-        purpose, in a chosen window of time.
+        Illustrative, not meant to be deployed: classic and modern
+        asymmetric cryptography implemented directly in raw Yul, small and
+        toy enough to verify by hand — including wallets sized to be
+        crackable on purpose, in a chosen window of time.
       </>
     ),
   },

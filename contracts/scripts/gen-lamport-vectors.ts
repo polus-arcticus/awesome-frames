@@ -1,5 +1,5 @@
 // Generates known-answer vectors for
-// src/grimoire/post-quantum/Lamport/lamport.ts, plus the reuse-forgery
+// src/toys/post-quantum/Lamport/lamport.ts, plus the reuse-forgery
 // case study: two real signatures over complementary digests from one
 // keypair, forged into a valid signature over a third digest that was
 // never actually signed — the Lamport analogue of YoloRSA's "the
@@ -12,7 +12,7 @@
 // Run: pnpm tsx scripts/gen-lamport-vectors.ts
 
 import {writeFileSync} from 'node:fs';
-import {keygen, hashToDigest, sign, verify, forgeFromTwoSignatures} from '../src/grimoire/post-quantum/Lamport/lamport.js';
+import {keygen, hashToDigest, sign, verify, forgeFromTwoSignatures} from '../src/toys/post-quantum/Lamport/lamport.js';
 
 function hex(b: Uint8Array): string {
 	return '0x' + Buffer.from(b).toString('hex');

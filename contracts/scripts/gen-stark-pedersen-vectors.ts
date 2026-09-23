@@ -1,5 +1,5 @@
 // Generates known-answer vectors for
-// src/grimoire/StarkPedersen/StarkPedersen.yul, derived from the JS/bigint
+// src/toys/StarkPedersen/StarkPedersen.yul, derived from the JS/bigint
 // mirror in test/js/utils/starkPedersen.ts and cross-checked at generation
 // time two independent ways before anything gets pinned:
 //   1. every `pedersen(x, y)` vector is checked byte-for-byte against

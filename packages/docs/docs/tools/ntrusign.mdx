@@ -1,0 +1,48 @@
+---
+title: NTRUSign
+---
+
+# `NTRUSign`
+
+A self-verifying EIP-8141 account authorized by an **NTRUSign** signature — the predecessor to Falcon, and a real, historically broken lattice signature scheme: Nguyen & Regev's 2006 "learning a parallelepiped" attack recovers the secret key from as few as 400 ordinary signatures at the scheme's real parameters. Deliberately weak, on purpose, the same way [`YoloRSA`](../toys/yolo-rsa.mdx)'s crackme accounts are — the difference is `NTRUSign` lives in `tools/`, not `toys/`: unlike a toy that's never meant to be used, this account is real and deployable, exactly the point of this repo's weak-crypto-marketplace pivot — Frame transactions make it cheap to deploy cryptography that's weak *on purpose* and stake correspondingly little on it.
+
+:::caution Good to deploy once MAX_VERIFY_GAS is raised
+Measured cost for one `verify()` call: **~121,700 gas** — over EIP-8141's *current* `MAX_VERIFY_GAS=100_000` public-mempool cap. This account is kept in `tools/` anyway rather than downgraded, because that ceiling is itself under active discussion: the [EIP-8141 breakout-call notes from 2026-09-01](https://ethereum-magicians.org/t/frame-transaction-breakout-3-sep-1-2026/29539/2) already have Nethermind's Daniil flagging 100,000 as too tight for privacy-pool withdrawals, with a working group proposed to study raising it — consistent with mainnet block gas limits climbing toward 80M+ while this single-frame ceiling has stayed fixed. The account itself is real and correct today; whether it clears the *current* public-mempool ceiling is a separate, evolving question.
+:::
+
+## Why N=18, not the gas-cheaper N=11
+
+Every other choice in this account was driven by keeping gas down — smaller `N` means a cheaper convolution. `N=11` was tried first for exactly that reason, and rejected for a reason that has nothing to do with gas: even with a tightly-reduced secret basis, a legitimate signature's closeness to its own message and its closeness to a totally unrelated message turned out to be statistically indistinguishable there. That's not "weak" in the way the rest of this scheme is weak on purpose — it's *non-functional* as a signature scheme, unable to give the honest signer a reliable "yes" even without an attacker involved.
+
+`N=18` is the smallest value tried that actually works: a real, measured gap between legitimate-signature closeness (worst case ~38-44) and cross-message closeness (best case ~52-56), confirmed with a direct "sign and verify 'hello world', reject 'goodbye world'" check, not just aggregate statistics.
+
+Run the N=11 failure live — same reduction discipline, same everything, just the one number changed:
+
+```bash skip
+pnpm tsx scripts/ntrusign-n11-failure-demo.ts
+```
+
+It narrates a real keygen and signature at N=11, then a 300-pair sweep showing the legit-vs-cross gap collapse to 3-5 points (vs. N=18's ~15), and confirms that tightening the reduction filter further to chase a bigger gap doesn't work either — below some threshold, there simply aren't enough well-reduced bases in a lattice this small to choose from, regardless of effort.
+
+## The ring, and why every value here is a single unsigned byte
+
+`N=18`, `q=128` — real historical NTRU value for `q`; `N` is toy-scale but not the smallest tried. A signature only needs to be transmitted and verified *mod q*: the closeness check and the `t = s·h` recovery are both mod-`q` operations, so the raw, unreduced Babai-rounding output the private key computes during signing is never needed on the wire, only its mod-128 residue. Every coefficient — the public key `h`, the signature `s`, the recovered `t`, the hashed message points `m1`/`m2` — fits in one unsigned byte, so no negative-number handling appears anywhere in the Yul.
+
+The public key `h` (18 coefficients, each < 128) packs into a single 32-byte word — `byte(i, hPacked)` gives coefficient `i` — small enough to keep in storage (one `SLOAD` per call), unlike [`LightningRSA`](./lightning-rsa.mdx)'s much larger RSA modulus, which needs code-embedding instead.
+
+## Message-to-lattice-point hashing, on-chain
+
+`keccak256(msgHash || "NTRUSign" || counter)`, consumed one byte per coefficient, re-hashing with an incremented counter once a 32-byte digest is exhausted. `KECCAK256` is a native EVM opcode, not a precompile call — but it's still admissible from a `VERIFY` frame either way, since the [validation-trace rule](../eip-8141.mdx) only restricts external `CALL*`/`EXTCODE*`, not opcodes. For `N=18` this needs exactly two `keccak256` calls: the first digest covers all 18 bytes of `m1` plus the first 14 bytes of `m2`; the second covers `m2`'s remaining 4 bytes.
+
+## The closeness check is cyclic, not raw subtraction
+
+`t` is recovered as `s·h mod q`, then checked against `m2` (and `s` against `m1`) via **cyclic** distance — `min(d, q-d)`, not `|a-b|`. A value already reduced mod 128 wraps: 125 and 3 are only 6 apart mod 128, not 122. Getting this wrong was the actual bug that made an early version of this account's JS reference look completely broken before it was found and fixed — see `test/js/utils/ntruSign.ts`'s `cyclicMaxDist` and this account's own `submodQ`/`cyclicDist` (the same "(a-b) mod q, guard against EVM's wrapping `sub`" idiom [`StarkPedersen`](../toys/stark-pedersen.mdx) already uses).
+
+## Verified two ways
+
+`test/yul/NTRUSignAccountVerifyHarness.yul` mirrors the account's verify math with the `SIGDATACOPY`/`TXPARAM`/`APPROVE` witness-pulling swapped for plain calldata, so it's testable on ordinary Hardhat — unlike the real account, which needs the live ethrex testnet for its actual verify path. On its first real test this session, the harness matched the JS reference exactly: message hashing, convolution, and the closeness check were all byte-for-byte correct with no debugging needed, a sharp contrast to the JS-side keygen math, which took real iteration to get right (see `test/js/utils/ntruSign.ts`'s header for that story — two earlier keygen approaches were genuinely broken, not just imperfect).
+
+- `test/js/utils/ntruSign.ts` — the JS/bigint reference: ring arithmetic, keygen (resultant/Bezout construction with basis-size-filtered reduction), message hashing, sign, verify.
+- `scripts/gen-ntrusign-vectors.ts` → `test/vectors/ntrusign-vectors.json` — pinned vectors, self-validated with a fresh 450-sample closeness-gap sweep before anything is pinned.
+- `test/js/NTRUSign.test.ts` — pinned vectors plus a live keygen/sign/verify/cross-reject round trip (JS only).
+- `test/js/NTRUSignAccount.test.ts` — the deployed account's constructor/getter (public-key embedding), plus the harness against the same pinned vectors and the real measured gas figure.

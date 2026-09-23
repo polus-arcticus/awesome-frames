@@ -1,5 +1,5 @@
 // Generates known-answer vectors for
-// src/grimoire/post-quantum/MlKem/mlKem.ts — a from-scratch ML-KEM-512
+// src/toys/post-quantum/MlKem/mlKem.ts — a from-scratch ML-KEM-512
 // (FIPS 203) implementation, cross-checked byte-for-byte against
 // @noble/post-quantum's `ml_kem512` (a real, audited implementation) at
 // every field: encapsulation key, decapsulation key, ciphertext, shared
@@ -16,7 +16,7 @@
 
 import {writeFileSync} from 'node:fs';
 import {randomBytes} from 'node:crypto';
-import {keygen, encapsulate, decapsulate} from '../src/grimoire/post-quantum/MlKem/mlKem.js';
+import {keygen, encapsulate, decapsulate} from '../src/toys/post-quantum/MlKem/mlKem.js';
 import {ml_kem512} from '@noble/post-quantum/ml-kem.js';
 
 function hex(b: Uint8Array): string {

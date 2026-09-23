@@ -12,7 +12,7 @@
 //
 // Unlike gen-vectors.ts's vector-1/2 (random keys, regenerated every run),
 // this uses a fixed secret key so the vector is reproducible — safe to
-// hardcode into test/solidity/BIP340/BIP340.t.sol without it drifting out
+// hardcode into test/solidity/tools/BIP340/BIP340.t.sol without it drifting out
 // from under the Solidity literals on a re-run.
 //
 // Run: pnpm tsx scripts/gen-nostr-tools-vector.ts

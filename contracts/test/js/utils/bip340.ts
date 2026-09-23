@@ -1,5 +1,5 @@
 // Pure-JS mirror of the ecrecover-trick reduction implemented in
-// src/BIP340/BIP340.sol (see that file's header comment, and
+// src/tools/BIP340/BIP340.sol (see that file's header comment, and
 // nostr-frame-schnorr-design.md §5.1). Used to cross-check the reduction
 // against signatures produced by independent BIP-340 implementations
 // *before*, or independently of, exercising the Solidity code itself.

@@ -79,7 +79,7 @@ const config: Config = {
           items: [
             {label: 'Introduction', to: '/docs/intro'},
             {label: 'EIP-8141 primer', to: '/docs/eip-8141'},
-            {label: 'The grimoire', to: '/docs/grimoire'},
+            {label: 'Toys', to: '/docs/toys'},
           ],
         },
         {

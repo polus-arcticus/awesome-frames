@@ -1,4 +1,4 @@
-// Brute-force-enumerates src/grimoire/ToyCurveECDH/ToyCurveECDH.yul's toy
+// Brute-force-enumerates src/toys/ToyCurveECDH/ToyCurveECDH.yul's toy
 // curve, verifies its group order rather than assuming it, and generates
 // known-answer vectors for point addition/doubling/scalar-multiplication
 // and a full two-party ECDH exchange — written to

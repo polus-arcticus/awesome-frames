@@ -152,7 +152,7 @@ async function main() {
 
 	// ── Step 2: deploy NostrFrameAccount.yul ──
 	const yulPath = fileURLToPath(
-		new URL('../src/NostrFrameAccount/NostrFrameAccount.yul', import.meta.url),
+		new URL('../src/tools/NostrFrameAccount/NostrFrameAccount.yul', import.meta.url),
 	);
 	const {init: accountInit} = compileYul(yulPath);
 	const accountInitWithArgs = concatHex([accountInit, addressWord(pAddress)]);

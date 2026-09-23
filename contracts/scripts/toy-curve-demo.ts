@@ -1,5 +1,5 @@
 // A narrated Alice/Bob key exchange against the deployed
-// src/grimoire/ToyCurveECDH/ToyCurveECDH.yul — see that file's header for
+// src/toys/ToyCurveECDH/ToyCurveECDH.yul — see that file's header for
 // the curve and the glossary. Needs no live network (no EIP-8141 opcodes
 // involved at all): runs against whatever network `contracts:execute`
 // points at, `local`/`default` included.
@@ -69,7 +69,7 @@ async function main() {
 	const publicClient = await viem.getPublicClient();
 
 	const yulPath = fileURLToPath(
-		new URL('../src/grimoire/ToyCurveECDH/ToyCurveECDH.yul', import.meta.url),
+		new URL('../src/toys/ToyCurveECDH/ToyCurveECDH.yul', import.meta.url),
 	);
 	const initBytecode = compileYul(yulPath);
 	const deployHash = await wallet!.sendTransaction({data: initBytecode});

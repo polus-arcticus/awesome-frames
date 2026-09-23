@@ -1,5 +1,5 @@
 // Generates known-answer vectors for
-// src/grimoire/post-quantum/Falcon/falcon.ts (a from-scratch, verify-only
+// src/toys/post-quantum/Falcon/falcon.ts (a from-scratch, verify-only
 // Falcon-512 implementation) — real keypairs and real signatures from
 // @noble/post-quantum's `falcon512padded` (the fixed-length-signature
 // variant matching this file's Algorithm-16-literal assumption of a
@@ -14,7 +14,7 @@
 // Run: pnpm tsx scripts/gen-falcon-vectors.ts
 
 import {writeFileSync} from 'node:fs';
-import {verify} from '../src/grimoire/post-quantum/Falcon/falcon.js';
+import {verify} from '../src/toys/post-quantum/Falcon/falcon.js';
 import {falcon512padded} from '@noble/post-quantum/falcon.js';
 
 function hex(b: Uint8Array): string {
