@@ -38,7 +38,7 @@ const publicKey = {
 	one: vectorsJson.publicKey.one.map(fromHex),
 };
 
-describe('Lamport (grimoire, post-quantum) — pinned known-answer vectors', function () {
+describe('Lamport (toys, post-quantum) — pinned known-answer vectors', function () {
 	for (const [i, v] of vectorsJson.signVectors.entries()) {
 		it(`accepts sign vector ${i} ("${v.message}")`, function () {
 			const digest = fromHex(v.digest);

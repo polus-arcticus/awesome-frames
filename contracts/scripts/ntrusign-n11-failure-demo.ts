@@ -17,7 +17,7 @@
 // (there aren't enough well-reduced bases to choose from in a lattice
 // this small). That's not "weak crypto" in the usual sense (small
 // modulus, guessable key) — it's a dimension too small for more
-// reduction effort to keep helping. Every other grimoire/toys entry in
+// reduction effort to keep helping. Every other toys entry in
 // this repo is broken on purpose in a specific, narrow way (YoloRSA: the
 // modulus is factorable; Lamport: reusing a keypair leaks it). This one
 // is broken structurally, and that's worth seeing happen live rather

@@ -7,8 +7,8 @@
 /// Unlike ../ToyCurveECDH/ToyCurveECDH.yul, every number in this file is a
 /// REAL Starknet constant, not a shrunk-for-legibility toy: the curve, the
 /// field, and the five "nothing up my sleeve" generator points are exactly
-/// what a Starknet node uses. This is the first grimoire step toward
-/// verifying Starknet-flavored (ScarabSign-style) signatures on Ethereum —
+/// what a Starknet node uses. This is a first step toward verifying
+/// Starknet-flavored (ScarabSign-style) signatures on Ethereum —
 /// not that verification itself, which needs STARK-curve ECDSA on top of
 /// this and is out of scope here.
 ///
@@ -121,8 +121,8 @@
 /// modulus's bit length; the `and(v, 1)` branch above leaks each folded
 /// value's bits through the presence or absence of a `jia_add` call), and
 /// it has had none of the scrutiny a production Starknet-interop contract
-/// would need. It is a small, stateless calculator you can read as a poem
-/// — the same spirit as every other grimoire entry.
+/// would need. It is a small, stateless calculator, legible on purpose —
+/// the same spirit as every other toys entry.
 object "StarkPedersen" {
 	code {
 		datacopy(0, dataoffset("runtime"), datasize("runtime"))

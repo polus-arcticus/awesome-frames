@@ -3,7 +3,7 @@
 // verify(). This file documents the gap on purpose rather than shipping a
 // half-working implementation — the same discipline this repo applies
 // everywhere else (no half-finished implementations, see the top-level
-// engineering guidelines this whole grimoire follows).
+// engineering guidelines this whole toys track follows).
 //
 // Why ML-DSA stopped here, next to MlKem going all the way: both are
 // Module-Lattice schemes over the same ring dimension (n=256), and both

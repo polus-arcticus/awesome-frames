@@ -5,7 +5,7 @@
 // (n=256) and modulus (q=3329) FIPS 203 specifies — shrink either and
 // there's no meaningful "hard problem" left to illustrate, only a broken
 // toy. So this file runs the real algorithm at real size, and earns its
-// place in the grimoire a different way: every algorithm below is
+// place in toys/ a different way: every algorithm below is
 // commented with its exact FIPS 203 algorithm number, and every subtle
 // convention choice this repo's own author got wrong on a first pass —
 // the K-byte domain separator in G(d‖k), the transposed j‖i (not i‖j)
@@ -47,7 +47,7 @@
 // from a textbook full NTT.
 //
 // Not constant-time, not for production — same disclaimer as every other
-// grimoire entry, doubly true here: real ML-KEM implementations spend
+// toys entry, doubly true here: real ML-KEM implementations spend
 // enormous effort on timing-safe sampling/comparison this file makes no
 // attempt at.
 

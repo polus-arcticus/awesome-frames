@@ -8,7 +8,7 @@ const GITHUB_URL = 'https://github.com/polus-arcticus/awesome-frames';
 
 const config: Config = {
   title: 'awesome-frames',
-  tagline: 'A playground for EIP-8141 Frame transactions on Ethereum',
+  tagline: 'EIP-8141 Frame transactions on Ethereum, and a supermarket of deliberately weak cryptography',
   favicon: 'img/favicon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future

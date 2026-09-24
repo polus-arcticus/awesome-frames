@@ -23,7 +23,7 @@ const vectorsJson: Vectors = JSON.parse(
 	readFileSync(fileURLToPath(new URL('../vectors/mceliece-vectors.json', import.meta.url)), 'utf8'),
 );
 
-describe('McEliece (grimoire, post-quantum) — pinned known-answer vectors', function () {
+describe('McEliece (toys, post-quantum) — pinned known-answer vectors', function () {
 	it('reports the expected toy parameters', function () {
 		expect(PARAMS.n).toEqual(15);
 		expect(PARAMS.k).toEqual(7);

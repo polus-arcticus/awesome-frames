@@ -47,7 +47,7 @@
 /// (RFC 8017's minimum for SHA-256 padding room) — enforced at
 /// construction. True for every standard RSA modulus size (512/1024/2048/
 /// 3072/4096 bits); this account isn't meant for anything smaller (use the
-/// grimoire's YoloRSA for that, on purpose).
+/// toys/YoloRSA for that, on purpose).
 ///
 /// Deployed code layout: [runtime code][e, 32 bytes][nLen, 32 bytes][n, nLen bytes].
 ///

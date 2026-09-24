@@ -37,7 +37,7 @@
 // ToyCurveECDH's own JS mirror already follows.
 //
 // Not constant-time, not for production — same disclaimer as every other
-// grimoire entry.
+// toys entry.
 
 // ── GF(16) = GF(2^4) via x^4+x+1, generator alpha=2 ──
 const GF_ORDER = 16;

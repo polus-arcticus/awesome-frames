@@ -1,5 +1,5 @@
 // Lamport one-time signatures — hash-based, not lattice/code/isogeny-based
-// like the rest of this grimoire's post-quantum survey. Filed under
+// like the rest of this toys track's post-quantum survey. Filed under
 // Vitalik's "even more esoteric" bucket, which is a little ironic once you
 // look at it: hash-based signatures are the *most conservative* PQC
 // family there is — security reduces entirely to the preimage resistance
@@ -41,7 +41,7 @@
 // approximation of it.
 //
 // Not constant-time, not for production — same disclaimer as every other
-// grimoire entry.
+// toys entry.
 
 import {keccak_256} from '@noble/hashes/sha3.js';
 import {randomBytes} from 'node:crypto';

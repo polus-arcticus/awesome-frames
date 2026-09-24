@@ -44,7 +44,7 @@
 // right and just as correct, at the cost of speed this toy doesn't need.
 //
 // Not constant-time, not for production — same disclaimer as every other
-// grimoire entry.
+// toys entry.
 
 import {shake256} from '@noble/hashes/sha3.js';
 

@@ -29,7 +29,7 @@ const vectorsJson: Vectors = JSON.parse(
 	readFileSync(fileURLToPath(new URL('../vectors/ml-kem-vectors.json', import.meta.url)), 'utf8'),
 );
 
-describe('MlKem (grimoire, post-quantum) — pinned known-answer vectors', function () {
+describe('MlKem (toys, post-quantum) — pinned known-answer vectors', function () {
 	for (const [i, v] of vectorsJson.keyVectors.entries()) {
 		describe(`vector ${i}`, function () {
 			const seed = fromHex(v.seed);

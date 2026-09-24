@@ -27,7 +27,7 @@ const vectorsJson: Vectors = JSON.parse(
 	readFileSync(fileURLToPath(new URL('../vectors/falcon-vectors.json', import.meta.url)), 'utf8'),
 );
 
-describe('Falcon (grimoire, post-quantum) — pinned known-answer vectors', function () {
+describe('Falcon (toys, post-quantum) — pinned known-answer vectors', function () {
 	const publicKey = fromHex(vectorsJson.publicKey);
 
 	for (const [i, v] of vectorsJson.signVectors.entries()) {

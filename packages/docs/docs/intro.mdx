@@ -25,14 +25,15 @@ As of 2026-08-27, EIP-8141 was upgraded to Scheduled-for-Inclusion for the "Hego
 .
 ├── contracts/                       # Hardhat v3 + rocketh contracts package
 │   ├── src/
-│   │   ├── tools/                   # meant to be deployed and used
+│   │   ├── tools/                   # meant to be deployed and used — real, working accounts
 │   │   │   ├── BIP340/              #   BIP-340 (Nostr) Schnorr verification library
 │   │   │   ├── NostrFrameAccount/   #   a VERIFY-frame account authorized by a
 │   │   │   │                         #     Nostr/BIP-340 Schnorr sig instead of ECDSA
-│   │   │   └── LightningRSA/        #   verify library + account together (unlike
-│   │   │                             #     BIP340/NostrFrameAccount's split — LightningRSA.sol
-│   │   │                             #     has no reuse outside its own account)
-│   │   └── toys/                    # illustrative, not meant to be deployed
+│   │   │   ├── LightningRSA/        #   verify library + account together (unlike
+│   │   │   │                         #     BIP340/NostrFrameAccount's split — LightningRSA.sol
+│   │   │   │                         #     has no reuse outside its own account)
+│   │   │   └── NTRUSign/            #   deployable, deliberately-broken lattice signature
+│   │   └── toys/                    # illustrative, for learning — not held to a deploy bar
 │   │       ├── ToyCurveECDH/        #   toy-curve ECDH, small enough to verify by hand
 │   │       ├── StarkPedersen/       #   Starknet's real Pedersen hash, on-chain in Yul
 │   │       ├── YoloRSA/             #   verify library + deployable crackme wallets, a
